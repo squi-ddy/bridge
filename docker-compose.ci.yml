@@ -1,0 +1,10 @@
+services:
+  bridge-frontend:
+    extends:
+      file: docker-compose.yml
+      service: frontend
+  bridge-backend:
+    extends:
+      file: docker-compose.yml
+      service: backend
+

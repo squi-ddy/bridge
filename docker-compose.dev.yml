@@ -1,0 +1,20 @@
+services:
+  frontend:
+    extends:
+      file: docker-compose.yml
+      service: frontend
+    ports:
+      - "3000:3000"
+    build:
+      dockerfile: ./frontend/Dockerfile
+      context: .
+      args:
+        API_URL: http://localhost:3001
+        NODE_ENV: development
+  backend:
+    extends:
+      file: docker-compose.yml
+      service: backend
+    ports:
+      - "3001:3001"
+

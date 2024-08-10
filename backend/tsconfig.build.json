@@ -1,0 +1,15 @@
+{
+    "compilerOptions": {
+        "module": "es2022",
+        "esModuleInterop": true,
+        "target": "es2017",
+        "moduleResolution": "node",
+        "sourceMap": true,
+        "outDir": "dist",
+        "resolveJsonModule": true,
+        "baseUrl": "generated",
+        "strict": true
+    },
+    "include": ["generated/**/*.ts", "generated/**/*.d.ts"],
+    "lib": ["es2015"]
+}

@@ -1,0 +1,47 @@
+{
+    "name": "backend",
+    "version": "0.0.0",
+    "description": "",
+    "main": "dist/index.js",
+    "type": "module",
+    "scripts": {
+        "start": "node dist/index.js",
+        "typia": "bunx typia generate --input src/ --output generated/ --project tsconfig.json",
+        "build-tsconfig": "mv tsconfig.json tsconfig.dev.json && mv tsconfig.build.json tsconfig.json",
+        "dev-tsconfig": "mv tsconfig.json tsconfig.build.json && mv tsconfig.dev.json tsconfig.json",
+        "bun-build": "bun build --target node generated/index.ts --outdir dist",
+        "build": "bun run typia && bun run build-tsconfig && bun run bun-build && bun run dev-tsconfig",
+        "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix",
+        "typecheck": "tsc --noemit",
+        "format": "prettier --write .",
+        "precommit": "npm run format && npm run lint && npm run typecheck"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "devDependencies": {
+        "@types/compression": "^1.7.5",
+        "@types/connect-memcached": "^1.0.3",
+        "@types/cors": "^2.8.17",
+        "@types/express": "^4.17.21",
+        "@types/express-session": "^1.18.0",
+        "@types/passport-local": "^1.0.38",
+        "@typescript-eslint/eslint-plugin": "^7.0.2",
+        "@typescript-eslint/parser": "^7.0.2",
+        "@vercel/ncc": "^0.38.1",
+        "eslint": "^8.9.0",
+        "typescript": "^5.0.4"
+    },
+    "dependencies": {
+        "compression": "^1.7.4",
+        "connect-memcached": "^2.0.0",
+        "cors": "^2.8.5",
+        "express": "^4.17.1",
+        "express-session": "^1.18.0",
+        "helmet": "^7.0.0",
+        "mysql2": "^3.9.2",
+        "passport": "^0.7.0",
+        "passport-local": "^1.0.0",
+        "typia": "^5.5.7"
+    }
+}

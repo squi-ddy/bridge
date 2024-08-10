@@ -1,0 +1,172 @@
+@import url("https://fonts.googleapis.com/css2?family=Nunito&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+    .font-nunito {
+        font-family: "Nunito", sans-serif;
+    }
+
+    .nav-button.active {
+        @apply bg-sky-100 text-sky-600 font-semibold;
+    }
+
+    input[type="number"] {
+        -webkit-appearance: textfield;
+        -moz-appearance: textfield;
+        appearance: textfield;
+    }
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+    }
+
+    .table-container {
+        @apply w-5/6 max-h-full h-fit overflow-y-scroll border-2 rounded-xl;
+    }
+
+    .data-table {
+        @apply border-separate w-full text-xl table-fixed;
+    }
+
+    .data-table > thead > tr {
+        @apply sticky top-0 z-10;
+    }
+
+    .data-table > thead > tr > th {
+        @apply border-b-2 border-l-2 font-semibold p-2 bg-sky-900;
+    }
+
+    .data-table > tbody > tr > td {
+        @apply text-center p-1 border-b-2 border-l-2 bg-slate-900;
+    }
+
+    .data-table > tbody > tr:nth-child(even) > td {
+        @apply bg-slate-950;
+    }
+
+    .data-table > tbody > tr > td:first-child,
+    .data-table > thead > tr > th:first-child {
+        @apply border-l-0;
+    }
+
+    .data-table > tbody > tr:last-child > td {
+        @apply border-b-0;
+    }
+
+    .calendar-table {
+        @apply border-separate w-full text-lg table-fixed;
+    }
+
+    .calendar-table > thead > tr > th,
+    .calendar-table > tbody > tr > th {
+        @apply border-b-2 border-l-2 font-semibold p-1 bg-sky-900;
+    }
+
+    .calendar-table > tbody > tr > th {
+        @apply text-base p-0;
+    }
+
+    .calendar-table > tbody > tr > td {
+        @apply text-center p-1 border-b-2 border-l-2;
+    }
+
+    .calendar-table > tbody > tr > td.contiguous {
+        @apply border-b-0;
+    }
+
+    .calendar-table > tbody > tr > td.contiguous-last {
+        @apply border-b-2;
+    }
+
+    .calendar-table > tbody > tr > *:first-child,
+    .calendar-table > thead > tr > th:first-child {
+        @apply border-l-0;
+    }
+
+    .calendar-table > tbody > tr:last-child > * {
+        @apply border-b-0;
+    }
+
+    .vert-table {
+        @apply border-separate w-full table-fixed;
+    }
+
+    .vert-table > tbody > tr > * {
+        @apply text-center border-b-2 border-l-2;
+    }
+
+    .vert-table > tbody > tr:nth-child(even) {
+        @apply bg-slate-950;
+    }
+
+    .vert-table > tbody > tr:last-child > * {
+        @apply border-b-0;
+    }
+
+    .vert-table > tbody > tr > th {
+        @apply border-l-0;
+    }
+
+    .vert-table > tbody > tr > th {
+        @apply font-semibold bg-sky-900;
+    }
+}
+
+@layer base {
+    html,
+    body,
+    #mount {
+        @apply h-full w-full;
+    }
+
+    #root {
+        @apply h-full w-full flex flex-col items-center;
+    }
+
+    body {
+        @apply bg-gray-900 text-white font-nunito;
+    }
+
+    html {
+        font-size: 7px;
+    }
+
+    @media screen(md) {
+        html {
+            font-size: 8px;
+        }
+    }
+
+    @media screen(lg) {
+        html {
+            font-size: 9px;
+        }
+    }
+
+    @media screen(xl) {
+        html {
+            font-size: 11px;
+        }
+    }
+
+    @media screen(2xl) {
+        html {
+            font-size: 11.5px;
+        }
+    }
+
+    @media screen(3xl) {
+        html {
+            font-size: 13.5px;
+        }
+    }
+
+    @media screen(4xl) {
+        html {
+            font-size: 20px;
+        }
+    }
+}
