@@ -2,7 +2,7 @@ import { Game } from "classes/Game"
 import { Socket } from "socket.io"
 import { Bet } from "types/Bet"
 import { Card } from "types/Card"
-import { ClientToServerEvents, InterServerEvents, ServerToClientEvents, SocketData } from "types/Events"
+import { ClientToServerEvents, InterServerEvents, ServerToClientEvents, SocketData } from "types/Socket"
 import { SocketReturnData, SocketReturnStatus } from "types/SocketReturn"
 import { v4 as uuidv4 } from "uuid"
 
@@ -10,6 +10,8 @@ const games = new Map<string, Game>()
 const pidToGid = new Map<string, string>()
 
 export function onConnection(socket: Socket<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>) {
+    socket.data = { gid: "", pid: "" }
+
     socket.on(
         "joinGame",
         (gid: string, name: string, callback: (data: SocketReturnData<string>) => void): void => {
@@ -23,10 +25,11 @@ export function onConnection(socket: Socket<ClientToServerEvents, ServerToClient
             const pid = uuidv4()
             pidToGid.set(pid, gid)
             const status = game.addPlayer(socket, pid, name)
-            if (status) {
+            if (status === 0) {
+                socket.data = { gid, pid }
                 return callback({ status: true, data: pid })
             } else {
-                return callback({ status: false })
+                return callback({ status: false, code: status })
             }
         },
     )
@@ -45,13 +48,14 @@ export function onConnection(socket: Socket<ClientToServerEvents, ServerToClient
         }
         if (game.removePlayer(pid)) {
             pidToGid.delete(pid)
+            socket.data = { gid: "", pid: "" }
             return callback({ status: true })
         } else {
             return callback({ status: false })
         }
     })
 
-    socket.on("reconnect", (pid: string, callback: (data: SocketReturnStatus) => void): void => {
+    socket.on("reconnect", (pid: string, callback: (data: SocketReturnData<number>) => void): void => {
         const gid = pidToGid.get(pid)
         if (!gid) {
             return callback({ status: false })
@@ -60,7 +64,11 @@ export function onConnection(socket: Socket<ClientToServerEvents, ServerToClient
         if (!game) {
             return callback({ status: false })
         }
-        return callback({ status: game.resyncSocket(pid, socket) })
+        const status = game.resyncSocket(pid, socket)
+        if (status === 2) {
+            socket.data = { gid, pid }
+        }
+        return callback({ status: true, data: status })
     })
 
     socket.on("rearrange", (pid: string, rel: number, callback: (data: SocketReturnStatus) => void): void => {
@@ -160,6 +168,12 @@ export function onConnection(socket: Socket<ClientToServerEvents, ServerToClient
     })
 
     socket.on("disconnect", () => {
-        // ignore
+        if (socket.data) {
+            const { gid, pid } = socket.data
+            const game = games.get(gid)
+            if (game) {
+                game.removeSocket(pid)
+            }
+        }
     })
 }

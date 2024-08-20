@@ -55,8 +55,6 @@ function FormTextInput(props: {
     const setErrorFunction = props.setErrorFunction ?? emptyFunction
     const edit = props.edit ?? true
 
-    console.log(edit)
-
     const submitFunction: InputSubmitFunction<string> = useCallback(() => {
         if (!edit) {
             return fieldValue
@@ -95,9 +93,7 @@ function FormTextInput(props: {
             {edit ? (
                 <>
                     {props.fieldPrefix && (
-                        <p
-                            className={`${textSize} text-center min-w-fit`}
-                        >
+                        <p className={`${textSize} text-center min-w-fit`}>
                             {props.fieldPrefix}
                         </p>
                     )}

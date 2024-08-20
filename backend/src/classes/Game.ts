@@ -37,10 +37,15 @@ export class Game {
         return this.players.get(pid)?.socket
     }
 
-    addPlayer(socket: Socket, pid: string, name: string): boolean {
-        if (this.gameState !== 0 || this.players.size >= 4) {
-            return false
+    addPlayer(socket: Socket, pid: string, name: string): number {
+        if (this.gameState !== 0) {
+            return 1 // game already started
         }
+            
+        if (this.players.size >= 4) {
+            return 2 // game full
+        }
+        
         const playerData: PlayerData = {
             id: pid,
             team: 0,
@@ -53,9 +58,9 @@ export class Game {
         this.players.set(pid, playerData)
         this.playerOrder.push(pid)
         for (const player of this.players.values()) {
-            player.socket.emit("syncState", this.getFullState(player.id))
+            player.socket?.emit("syncState", this.getFullState(player.id))
         }
-        return true
+        return 0
     }
 
     removePlayer(pid: string): boolean {
@@ -65,7 +70,7 @@ export class Game {
         this.players.delete(pid)
         this.playerOrder = this.playerOrder.filter((id) => id !== pid)
         for (const player of this.players.values()) {
-            player.socket.emit("syncState", this.getFullState(player.id))
+            player.socket?.emit("syncState", this.getFullState(player.id))
         }
         return true
     }
@@ -85,7 +90,7 @@ export class Game {
         this.playerOrder[playerIndex] = this.playerOrder[playerIndex + rel]
         this.playerOrder[playerIndex + rel] = pid
         for (const player of this.players.values()) {
-            player.socket.emit("syncState", this.getFullState(player.id))
+            player.socket?.emit("syncState", this.getFullState(player.id))
         }
         return true
     }
@@ -119,7 +124,7 @@ export class Game {
                 return true
             }
             for (const player of this.players.values()) {
-                player.socket.emit("syncState", this.getFullState(player.id))
+                player.socket?.emit("syncState", this.getFullState(player.id))
             }
         }
         return true
@@ -143,7 +148,7 @@ export class Game {
 
         if (lowestScore <= 4) {
             for (const player of this.players.values()) {
-                player.socket.emit("syncState", this.getFullState(player.id))
+                player.socket?.emit("syncState", this.getFullState(player.id))
             }
             return
         }
@@ -151,7 +156,7 @@ export class Game {
         this.gameState = 2
         this.currentActivePlayer = 0
         for (const player of this.players.values()) {
-            player.socket.emit("syncState", this.getFullState(player.id))
+            player.socket?.emit("syncState", this.getFullState(player.id))
         }
     }
 
@@ -161,7 +166,7 @@ export class Game {
         }
 
         for (const player of this.players.values()) {
-            player.socket.emit("syncState", this.getFullState(player.id))
+            player.socket?.emit("syncState", this.getFullState(player.id))
         }
 
         this.startGame()
@@ -187,7 +192,7 @@ export class Game {
                 return true
             }
             for (const player of this.players.values()) {
-                player.socket.emit("syncState", this.getFullState(player.id))
+                player.socket?.emit("syncState", this.getFullState(player.id))
             }
             return true
         }
@@ -201,7 +206,7 @@ export class Game {
 
         this.currentBet = bet
         for (const player of this.players.values()) {
-            player.socket.emit("syncState", this.getFullState(player.id))
+            player.socket?.emit("syncState", this.getFullState(player.id))
         }
         return true
     }
@@ -211,7 +216,7 @@ export class Game {
         this.currentActivePlayer = -1
 
         for (const player of this.players.values()) {
-            player.socket.emit("syncState", this.getFullState(player.id))
+            player.socket?.emit("syncState", this.getFullState(player.id))
         }
     }
 
@@ -258,7 +263,7 @@ export class Game {
         this.currentActivePlayer = startingPlayer
 
         for (const player of this.players.values()) {
-            player.socket.emit("syncState", this.getFullState(player.id))
+            player.socket?.emit("syncState", this.getFullState(player.id))
         }
 
         return true
@@ -304,7 +309,7 @@ export class Game {
             this.endRound()
         } else {
             for (const player of this.players.values()) {
-                player.socket.emit("syncState", this.getFullState(player.id))
+                player.socket?.emit("syncState", this.getFullState(player.id))
             }
         }
         return true
@@ -366,13 +371,13 @@ export class Game {
 
         this.playedCards = [null, null, null, null]
         for (const player of this.players.values()) {
-            player.socket.emit("syncState", this.getFullState(player.id))
+            player.socket?.emit("syncState", this.getFullState(player.id))
         }
     }
 
     endGame(winningTeam: number) {
         for (const { socket } of this.players.values()) {
-            socket.emit(
+            socket?.emit(
                 "endGame",
                 Array.from(this.players.values())
                     .filter((player) => player.team === winningTeam)
@@ -384,14 +389,24 @@ export class Game {
         this.gameState = 0
     }
 
-    resyncSocket(pid: string, socket: Socket): boolean {
+    resyncSocket(pid: string, socket: Socket): number {
         const player = this.players.get(pid)
         if (player) {
+            if (player.socket) {
+                return 1 // already connected
+            }
             player.socket = socket
-            player.socket.emit("syncState", this.getFullState(pid))
-            return true
+            player.socket?.emit("syncState", this.getFullState(pid))
+            return 2 // reconnected
         }
-        return false
+        return 0 // player not found
+    }
+
+    removeSocket(pid: string) {
+        const player = this.players.get(pid)
+        if (player) {
+            player.socket = null
+        }
     }
 
     getFullState(pid: string): CensoredGameState {

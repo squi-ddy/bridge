@@ -1,7 +1,7 @@
 import { settings } from "settings"
 import { onConnection } from "socket"
 import { Server } from "socket.io"
-import { ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData } from "types/Events"
+import { ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData } from "types/Socket"
 
 const port = settings.PORT
 
@@ -14,6 +14,7 @@ const io = new Server<ClientToServerEvents, ServerToClientEvents, InterServerEve
     cors: {
         origin: allowedOrigins,
     },
+    transports: ['websocket']
 })
 
 io.on("connection", onConnection)

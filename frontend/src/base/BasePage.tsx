@@ -1,14 +1,15 @@
 import { motion } from "framer-motion"
 import { createContext, useCallback, useEffect, useMemo, useState } from "react"
-import { CensoredData } from "@backend/types/CensoredData"
-import { SocketReturnStatus } from "@backend/types/SocketReturn"
-import { socket } from "@/socket"
+import { createSocket } from "@/socket"
 import { CensoredGameState } from "@backend/types/CensoredGameState"
+import { ClientToServerEvents, ServerToClientEvents } from "@backend/types/Socket"
+import { Socket } from "socket.io-client"
 
 export const SocketContext = createContext<{
     gameState: CensoredGameState | null | undefined
+    socket?: Socket<ServerToClientEvents, ClientToServerEvents>
     firstRender: boolean
-}>({ gameState: undefined, firstRender: true })
+}>({ gameState: undefined, socket: undefined, firstRender: true })
 
 const topBarVariants = {
     visible: {
@@ -39,10 +40,10 @@ const itemVariants = {
 }
 
 function BasePage(props: { children?: React.ReactNode }) {
-    const [currentGameState, setCurrentGameState] = useState<
-        CensoredGameState | null
-    >(null)
+    const [currentGameState, setCurrentGameState] =
+        useState<CensoredGameState | null>(null)
     const [firstRender, setFirstRender] = useState(true)
+    const [socket, setSocket] = useState<Socket<ServerToClientEvents, ClientToServerEvents> | undefined>(undefined)
 
     useEffect(() => {
         if (currentGameState === undefined) {
@@ -55,12 +56,15 @@ function BasePage(props: { children?: React.ReactNode }) {
     }, [currentGameState, firstRender])
 
     useEffect(() => {
+        const socket = createSocket()
+        setSocket(socket)
         socket.on("syncState", (state: CensoredGameState) => {
             setCurrentGameState(state)
         })
 
         return () => {
             socket.off("syncState")
+            socket.disconnect()
         }
     }, [])
 
@@ -70,17 +74,24 @@ function BasePage(props: { children?: React.ReactNode }) {
             setCurrentGameState(null)
             return
         }
-        
-        socket.emit("reconnect", pid, (data: SocketReturnStatus) => {
-            if (data.status) {
-                console.log("Reconnected")
-            } else {
+
+        socket?.emit("reconnect", pid, (data) => {
+            if (!data.status || data.data === 0) {
+                // failed to resync
                 console.log("Failed to reconnect")
                 setCurrentGameState(null)
                 localStorage.removeItem("pid")
+            } else if (data.data === 1) {
+                // already connected
+                alert("You're already connected!")
+                socket.disconnect()
+                window.close()
+            } else {
+                // success
+                console.log("Reconnected")
             }
         })
-    }, [])
+    }, [socket])
 
     useEffect(() => {
         resyncGame()
@@ -89,9 +100,10 @@ function BasePage(props: { children?: React.ReactNode }) {
     const contextValue = useMemo(() => {
         return {
             gameState: currentGameState,
+            socket,
             firstRender,
         }
-    }, [currentGameState, firstRender])
+    }, [currentGameState, socket, firstRender])
 
     if (currentGameState === undefined) {
         return <></>

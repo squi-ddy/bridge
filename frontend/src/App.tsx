@@ -4,11 +4,16 @@ import BasePage from "./base/BasePage"
 import MotionBase from "./base/MotionBase"
 import JoinGamePage from "./pages/JoinGamePage"
 import Page404 from "./pages/Page404"
+import LobbyPage from "./pages/LobbyPage"
 
 const routes = [
     {
         path: "/",
         element: <JoinGamePage />,
+    },
+    {
+        path: "room/:roomCode",
+        element: <LobbyPage />,
     },
     {
         path: "*",

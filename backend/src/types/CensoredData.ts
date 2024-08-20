@@ -6,4 +6,5 @@ export type CensoredData = {
     numCards: number[]
     hand: Card[] | null
     handPoints: number
+    order: number
 }

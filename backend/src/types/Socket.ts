@@ -11,7 +11,7 @@ export interface ServerToClientEvents {
 export interface ClientToServerEvents {
     joinGame: (gid: string, name: string, callback: (data: SocketReturnData<string>) => void) => void
     leaveGame: (pid: string, callback: (data: SocketReturnStatus) => void) => void
-    reconnect: (pid: string, callback: (data: SocketReturnStatus) => void) => void 
+    reconnect: (pid: string, callback: (data: SocketReturnData<number>) => void) => void 
     rearrange: (pid: string, rel: number, callback: (data: SocketReturnStatus) => void) => void
     toggleStartGame: (pid: string, callback: (data: SocketReturnStatus) => void) => void
     submitWash: (pid: string, callback: (data: SocketReturnStatus) => void) => void
@@ -23,4 +23,7 @@ export interface ClientToServerEvents {
 
 export interface InterServerEvents {}
 
-export interface SocketData {}
+export interface SocketData {
+    gid: string
+    pid: string
+}

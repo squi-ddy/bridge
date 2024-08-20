@@ -24,7 +24,7 @@ function MotionBase(props: { children: ReactNode; layout?: boolean }) {
             exit={"exit"}
             transition={{ duration: 0 }}
             layout={props.layout}
-            className="grow flex flex-col gap-4 justify-center items-center w-full h-full min-h-0 relative z-0"
+            className="grow flex flex-col gap-2 justify-center items-center w-full h-full min-h-0 relative z-0"
         >
             {props.children}
         </motion.div>

@@ -5,6 +5,7 @@ export type SocketReturnData<T> =
       }
     | {
           status: false
+          code?: number
       }
 
 export type SocketReturnStatus = {

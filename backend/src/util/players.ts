@@ -12,6 +12,7 @@ export function censorPlayerData(
         numCards: playerOrder.map((id) => players.get(id)!.cards.length),
         hand: players.get(pid)!.cards || [],
         handPoints: players.get(pid)!.handPoints,
+        order: playerOrder.findIndex((id) => id === pid),
     }
 }
 
