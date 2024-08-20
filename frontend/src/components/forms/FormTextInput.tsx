@@ -55,6 +55,8 @@ function FormTextInput(props: {
     const setErrorFunction = props.setErrorFunction ?? emptyFunction
     const edit = props.edit ?? true
 
+    console.log(edit)
+
     const submitFunction: InputSubmitFunction<string> = useCallback(() => {
         if (!edit) {
             return fieldValue
@@ -87,16 +89,14 @@ function FormTextInput(props: {
             variants={props.variants}
             key={props.fieldName + (edit ? "-edit" : "")}
             ref={refs.setReference}
-            className={`min-w-0 ${h} ${width} ${z} ${
-                edit ? "" : "flex items-center"
-            }`}
+            className={`min-w-0 ${h} ${width} ${z} flex items-center gap-4`}
             layout
         >
             {edit ? (
                 <>
                     {props.fieldPrefix && (
                         <p
-                            className={`${errorTextSize} w-1/6 text-center min-w-fit`}
+                            className={`${textSize} text-center min-w-fit`}
                         >
                             {props.fieldPrefix}
                         </p>

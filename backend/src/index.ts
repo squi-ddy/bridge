@@ -1,9 +1,21 @@
 import { settings } from "settings"
-import { server } from "setup"
+import { onConnection } from "socket"
+import { Server } from "socket.io"
+import { ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData } from "types/Events"
 
 const port = settings.PORT
-const domain = settings.DOMAIN
 
-server.listen(port, (): void => {
-    return console.log(`Express is listening at http://${domain}:${port}`)
+const allowedOrigins = [
+    new RegExp("http://localhost:[0-9]+"),
+    "https://squiddy.me",
+]
+
+const io = new Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>({
+    cors: {
+        origin: allowedOrigins,
+    },
 })
+
+io.on("connection", onConnection)
+
+io.listen(port)

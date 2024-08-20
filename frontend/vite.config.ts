@@ -11,6 +11,7 @@ export default defineConfig({
             include: [
                 "./src/**/*.ts",
                 "./src/**/*.tsx",
+                "../backend/src/types/*.ts"
             ],
         }),
     ],

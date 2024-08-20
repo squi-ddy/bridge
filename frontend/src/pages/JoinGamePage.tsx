@@ -4,6 +4,12 @@ import { FaPerson } from "react-icons/fa6"
 import SetTitle from "@/components/SetTitle"
 import { useNavigate } from "react-router-dom"
 import MotionButton from "@/components/MotionButton"
+import { useCallback, useContext, useRef } from "react"
+import { SocketContext } from "@/base/BasePage"
+import { InputErrorFunction, InputFunctionContainer, InputFunctionItems } from "@/types/FormDefinition"
+import FormTextInput from "@/components/forms/FormTextInput"
+import { socket } from "@/socket"
+import { SocketReturnData } from "@backend/types/SocketReturn"
 
 const itemVariants = {
     hidden: { transform: "translateY(-20px)", opacity: 0 },
@@ -11,93 +17,150 @@ const itemVariants = {
     exit: { opacity: 0 },
 }
 
-function MainPage() {
+const mainVariants = {
+    hidden: { opacity: 0, transform: "translateY(-20px)" },
+    visible: {
+        opacity: 1,
+        transform: "translateY(0)",
+        transition: { when: "beforeChildren", staggerChildren: 0.1 },
+    },
+    exit: {
+        opacity: 0,
+        transition: { when: "afterChildren", staggerChildren: 0.01 },
+    },
+}
+
+const fieldNames = ["roomCode", "name"] as const
+
+const defaultInputContainer = {
+    roomCode: {
+        submitFunc: () => "",
+        errorFunc: () => "",
+        value: "",
+    } as InputFunctionItems<string>,
+    name: {
+        submitFunc: () => "",
+        errorFunc: () => "",
+        value: "",
+    } as InputFunctionItems<string>,
+} satisfies InputFunctionContainer<typeof fieldNames>
+
+function JoinGamePage() {
+    const inputContainer = useRef(defaultInputContainer)
+
+    const setSubmitFunction = useCallback(
+        (key: keyof typeof defaultInputContainer) => {
+            return (
+                func: (typeof defaultInputContainer)[typeof key]["submitFunc"],
+            ) => {
+                inputContainer.current[key]["submitFunc"] = func
+            }
+        },
+        [],
+    )
+
+    const setErrorFunction = useCallback(
+        (key: keyof typeof defaultInputContainer) => {
+            return (func: InputErrorFunction) => {
+                inputContainer.current[key]["errorFunc"] = func
+            }
+        },
+        [],
+    )
+
     const navigate = useNavigate()
 
-    // const { user } = useContext(UserContext)
+    const { gameState } = useContext(SocketContext)
 
-    // if (user) return <HomePage />
+    if (gameState) {
+        navigate("/room/" + gameState.roomCode)
+    }
 
     return (
         <>
-            <SetTitle title="Singapore Bridge" />
-            <div className="grow-[2]" />
-            <motion.h1 variants={itemVariants} className="text-8xl">
-                A place for
-            </motion.h1>
-            <motion.div variants={itemVariants}>
-                {/* <SlidingText /> */}
+            <SetTitle title="Bridge" />
+            
+            <motion.div
+                variants={mainVariants}
+                className="flex flex-col gap-4 justify-center items-center border-2 rounded-xl p-4 w-1/3"
+                layout
+            >
+            <FormTextInput
+                fieldName="room-code"
+                variants={itemVariants}
+                fieldPrefix="Room Code"
+                fieldPlaceholder="ABCD"
+                checker={(value: string) => {
+                    if (!value)
+                        return {
+                            success: false,
+                            message: "Enter a room code!",
+                        }
+                    if (!/^[a-zA-Z]{4}$/i.test(value)) {
+                        return {
+                            success: false,
+                            message:
+                                "Room code must be 4 letters long!",
+                        }
+                    }
+                    return { success: true }
+                }}
+                setSubmitFunction={setSubmitFunction("roomCode")}
+                setErrorFunction={setErrorFunction("roomCode")}
+            />
+
+            <FormTextInput
+                fieldName="name"
+                variants={itemVariants}
+                fieldPrefix="Name"
+                fieldPlaceholder=""
+                z="z-[-1]"
+                checker={(value: string) => {
+                    if (!value)
+                        return {
+                            success: false,
+                            message: "Enter a name!",
+                        }
+                    if (value.length > 20)
+                        return {
+                            success: false,
+                            message: "Name must be less than 20 characters!",
+                        }
+                    return { success: true }
+                }}
+                setSubmitFunction={setSubmitFunction("name")}
+                setErrorFunction={setErrorFunction("name")}
+            />
+             <MotionButton
+                text="Join Game!"
+                variants={itemVariants}
+                onClick={async () => {
+                    let anyNulls = false
+                    for (const field of fieldNames) {
+                        const value = inputContainer.current[field].submitFunc()
+                        if (value === null) {
+                            anyNulls = true
+                            continue
+                        }
+                        inputContainer.current[field].value = value
+                    }
+                    if (anyNulls) return
+                    const roomCode = inputContainer.current.roomCode.value
+                    const name = inputContainer.current.name.value
+                    const resp = await socket.emitWithAck("joinGame", roomCode.toUpperCase(), name)
+                    if (!resp.status) {
+                        alert(`Internal error`)
+                    } else {
+                        localStorage.setItem("pid", resp.data)
+                    }
+                }}
+                textSize="text-xl"
+                z="z-[-2]"
+                layout
+            />
             </motion.div>
-
-            <div className="grow-[3]" />
-
-            <motion.h1 className="text-4xl" variants={itemVariants}>
-                Peerly is a place for students to{" "}
-                <span className="text-orange-400">collaborate</span> and{" "}
-                <span className="text-orange-400">learn</span> together.
-            </motion.h1>
-            <motion.h1 className="text-4xl" variants={itemVariants}>
-                Students can <span className="text-orange-400">mentor</span>{" "}
-                each other, and <span className="text-orange-400">bond</span>{" "}
-                with each other.
-            </motion.h1>
-            <div className="flex gap-2 w-full justify-center">
-                <MotionButton
-                    variants={itemVariants}
-                    whileHover={{ transform: "translateY(-5px)" }}
-                    text="Join Peerly"
-                    textSize="text-2xl"
-                    emphasis
-                    onClick={() => {
-                        navigate("/auth/register")
-                    }}
-                />
-            </div>
-            <div className="grow" />
-            <div className="flex gap-4 w-full justify-center">
-                <motion.div
-                    variants={itemVariants}
-                    className="border-2 rounded-xl p-4 w-1/5 aspect-square h-auto flex flex-col items-center justify-center gap-2"
-                >
-                    <FaChalkboardTeacher className="grow aspect-square w-auto max-h-[40%]" />
-                    <h1 className="text-4xl text-orange-400 font-bold">
-                        Mentorship
-                    </h1>
-                    <p className="text-xl text-center">
-                        Students can mentor each other, learning from others,
-                        but also reinforcing their own knowledge.
-                    </p>
-                </motion.div>
-                <motion.div
-                    variants={itemVariants}
-                    className="border-2 rounded-xl p-4 w-1/5 aspect-square h-auto flex flex-col items-center justify-center gap-2"
-                >
-                    <FaPeopleCarry className="grow aspect-square w-auto max-h-[40%]" />
-                    <h1 className="text-4xl text-orange-400 font-bold">
-                        Bonding
-                    </h1>
-                    <p className="text-xl text-center">
-                        Tutoring helps students bond with each other, and form
-                        friendships that last a lifetime.
-                    </p>
-                </motion.div>
-                <motion.div
-                    variants={itemVariants}
-                    className="border-2 rounded-xl p-4 w-1/5 aspect-square h-auto flex flex-col items-center justify-center gap-2"
-                >
-                    <FaPerson className="grow aspect-square w-auto max-h-[40%]" />
-                    <h1 className="text-4xl text-orange-400 font-bold">
-                        Personal
-                    </h1>
-                    <p className="text-xl text-center">
-                        Peerly assigns 1-on-1 tutoring sessions, so that
-                        students can get the most out of their time.
-                    </p>
-                </motion.div>
-            </div>
-            <div className="grow-[2]" />
         </>
     )
 }
 
-export default MainPage
+export default JoinGamePage

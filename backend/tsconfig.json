@@ -8,7 +8,10 @@
         "resolveJsonModule": true,
         "baseUrl": "src",
         "strict": true,
-        "skipLibCheck": true
+        "skipLibCheck": true,
+        "paths": {
+            "@/*": ["./*"]
+        }
     },
     "include": ["src/**/*.ts", "src/**/*.d.ts"],
     "lib": ["es2015"]

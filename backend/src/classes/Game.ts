@@ -1,21 +1,24 @@
 import { Socket } from "socket.io"
-import { Bet } from "types/Bet"
-import { Card } from "types/Card"
-import { PlayerData } from "types/PlayerData"
-import { censorPlayerData } from "util/censorPlayerData"
-import { calculateWash, dealHands } from "util/dealCards"
+import { Bet } from "@/types/Bet"
+import { Card } from "@/types/Card"
+import { CensoredGameState } from "@/types/CensoredGameState"
+import { PlayerData } from "@/types/PlayerData"
+import { censorPlayerData, dedupeName } from "@/util/players"
+import { calculateWash, dealHands } from "@/util/cards"
 
 export class Game {
+    roomCode: string
     players: Map<string, PlayerData>
     playerOrder: string[]
-    gameState: number // 0 = waiting, 1 = betting, 2 = choose partner, 3 = playing
+    gameState: number // 0 = waiting, 1 = wait for wash, 2 = betting, 3 = choose partner, 4 = playing
     currentBet: Bet
     currentActivePlayer: number
     roundStartPlayer: number
     tricksWon: Card[][][]
     playedCards: (Card | null)[]
 
-    constructor() {
+    constructor(roomCode: string) {
+        this.roomCode = roomCode
         this.players = new Map()
         this.playerOrder = []
         this.gameState = 0
@@ -44,13 +47,13 @@ export class Game {
             cards: [],
             handPoints: 0,
             socket: socket,
-            name: name,
+            name: dedupeName(Array.from(this.players.values()), name),
             okToStart: false,
         }
         this.players.set(pid, playerData)
         this.playerOrder.push(pid)
         for (const player of this.players.values()) {
-            player.socket.emit("syncLobby", this.getFullState(player.id))
+            player.socket.emit("syncState", this.getFullState(player.id))
         }
         return true
     }
@@ -62,28 +65,29 @@ export class Game {
         this.players.delete(pid)
         this.playerOrder = this.playerOrder.filter((id) => id !== pid)
         for (const player of this.players.values()) {
-            player.socket.emit("syncLobby", this.getFullState(player.id))
+            player.socket.emit("syncState", this.getFullState(player.id))
         }
         return true
     }
 
-    movePlayer(pid: string, rel: number) {
+    movePlayer(pid: string, rel: number): boolean {
         // rel +1 -> move down, rel -1 -> move up
         if (this.gameState !== 0) {
-            return
+            return false
         }
         const playerIndex = this.playerOrder.findIndex((id) => id === pid)
         if (
             playerIndex + rel < 0 ||
             playerIndex + rel >= this.playerOrder.length
         ) {
-            return
+            return false
         }
         this.playerOrder[playerIndex] = this.playerOrder[playerIndex + rel]
         this.playerOrder[playerIndex + rel] = pid
         for (const player of this.players.values()) {
-            player.socket.emit("syncLobby", this.getFullState(player.id))
+            player.socket.emit("syncState", this.getFullState(player.id))
         }
+        return true
     }
 
     resetState() {
@@ -115,7 +119,7 @@ export class Game {
                 return true
             }
             for (const player of this.players.values()) {
-                player.socket.emit("syncLobby", this.getFullState(player.id))
+                player.socket.emit("syncState", this.getFullState(player.id))
             }
         }
         return true
@@ -139,14 +143,15 @@ export class Game {
 
         if (lowestScore <= 4) {
             for (const player of this.players.values()) {
-                player.socket.emit("waitWash", this.getFullState(player.id))
+                player.socket.emit("syncState", this.getFullState(player.id))
             }
             return
         }
 
+        this.gameState = 2
         this.currentActivePlayer = 0
         for (const player of this.players.values()) {
-            player.socket.emit("startGame", this.getFullState(player.id))
+            player.socket.emit("syncState", this.getFullState(player.id))
         }
     }
 
@@ -156,7 +161,7 @@ export class Game {
         }
 
         for (const player of this.players.values()) {
-            player.socket.emit("wash", this.getFullState(player.id))
+            player.socket.emit("syncState", this.getFullState(player.id))
         }
 
         this.startGame()
@@ -165,7 +170,7 @@ export class Game {
 
     submitBet(pid: string, bet: Bet | null): boolean {
         if (
-            this.gameState !== 1 ||
+            this.gameState !== 2 ||
             this.currentActivePlayer !==
                 this.playerOrder.findIndex((id) => id === pid)
         ) {
@@ -182,7 +187,7 @@ export class Game {
                 return true
             }
             for (const player of this.players.values()) {
-                player.socket.emit("submitBet", this.getFullState(player.id))
+                player.socket.emit("syncState", this.getFullState(player.id))
             }
             return true
         }
@@ -196,22 +201,22 @@ export class Game {
 
         this.currentBet = bet
         for (const player of this.players.values()) {
-            player.socket.emit("submitBet", this.getFullState(player.id))
+            player.socket.emit("syncState", this.getFullState(player.id))
         }
         return true
     }
 
     choosePartner() {
-        this.gameState = 2
+        this.gameState = 3
         this.currentActivePlayer = -1
 
         for (const player of this.players.values()) {
-            player.socket.emit("choosePartner", this.getFullState(player.id))
+            player.socket.emit("syncState", this.getFullState(player.id))
         }
     }
 
     choosePartnerSubmit(pid: string, partnerCard: Card): boolean {
-        if (this.gameState !== 2 || this.currentBet.pid !== pid) {
+        if (this.gameState !== 3 || this.currentBet.pid !== pid) {
             return false
         }
 
@@ -240,7 +245,7 @@ export class Game {
         partner.team = 1
         this.players.get(pid)!.team = 1
 
-        this.gameState = 3
+        this.gameState = 4
 
         let startingPlayer = this.playerOrder.findIndex(
             (id) => id === this.currentBet.pid,
@@ -253,7 +258,7 @@ export class Game {
         this.currentActivePlayer = startingPlayer
 
         for (const player of this.players.values()) {
-            player.socket.emit("startRounds", this.getFullState(player.id))
+            player.socket.emit("syncState", this.getFullState(player.id))
         }
 
         return true
@@ -261,7 +266,7 @@ export class Game {
 
     playCard(pid: string, card: Card): boolean {
         if (
-            this.gameState !== 3 ||
+            this.gameState !== 4 ||
             this.playerOrder[this.currentActivePlayer] !== pid
         ) {
             return false
@@ -299,14 +304,14 @@ export class Game {
             this.endRound()
         } else {
             for (const player of this.players.values()) {
-                player.socket.emit("playCard", this.getFullState(player.id))
+                player.socket.emit("syncState", this.getFullState(player.id))
             }
         }
         return true
     }
 
     endRound() {
-        if (this.gameState !== 3) {
+        if (this.gameState !== 4) {
             return
         }
 
@@ -361,7 +366,7 @@ export class Game {
 
         this.playedCards = [null, null, null, null]
         for (const player of this.players.values()) {
-            player.socket.emit("endRound", this.getFullState(player.id))
+            player.socket.emit("syncState", this.getFullState(player.id))
         }
     }
 
@@ -389,7 +394,7 @@ export class Game {
         return false
     }
 
-    getFullState(pid: string) {
+    getFullState(pid: string): CensoredGameState {
         return {
             gameState: this.gameState,
             currentBet: this.currentBet,
@@ -397,6 +402,7 @@ export class Game {
             roundStartPlayer: this.roundStartPlayer,
             tricksWon: this.tricksWon,
             playedCards: this.playedCards,
+            roomCode: this.roomCode,
             players: censorPlayerData(this.players, this.playerOrder, pid),
         }
     }

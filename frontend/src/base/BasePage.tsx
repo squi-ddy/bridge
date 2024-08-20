@@ -1,10 +1,14 @@
 import { motion } from "framer-motion"
 import { createContext, useCallback, useEffect, useMemo, useState } from "react"
+import { CensoredData } from "@backend/types/CensoredData"
+import { SocketReturnStatus } from "@backend/types/SocketReturn"
+import { socket } from "@/socket"
+import { CensoredGameState } from "@backend/types/CensoredGameState"
 
-export const UserContext = createContext<{
-    updateUser: () => Promise<void>
+export const SocketContext = createContext<{
+    gameState: CensoredGameState | null | undefined
     firstRender: boolean
-}>({ updateUser: async () => {}, firstRender: true })
+}>({ gameState: undefined, firstRender: true })
 
 const topBarVariants = {
     visible: {
@@ -35,45 +39,67 @@ const itemVariants = {
 }
 
 function BasePage(props: { children?: React.ReactNode }) {
-    // const [currentUser, setCurrentUser] = useState<
-    //     null | undefined
-    // >(undefined)
-    // const [firstRender, setFirstRender] = useState(true)
+    const [currentGameState, setCurrentGameState] = useState<
+        CensoredGameState | null
+    >(null)
+    const [firstRender, setFirstRender] = useState(true)
 
-    // useEffect(() => {
-    //     if (currentUser === undefined) {
-    //         // doesn't count
-    //         return
-    //     }
-    //     if (firstRender) {
-    //         setFirstRender(false)
-    //     }
-    // }, [currentUser, firstRender])
+    useEffect(() => {
+        if (currentGameState === undefined) {
+            // doesn't count
+            return
+        }
+        if (firstRender) {
+            setFirstRender(false)
+        }
+    }, [currentGameState, firstRender])
 
-    // const updateUser = useCallback(async () => {
-    //     const user = await getCurrentSession()
-    //     setCurrentUser(user)
-    // }, [])
+    useEffect(() => {
+        socket.on("syncState", (state: CensoredGameState) => {
+            setCurrentGameState(state)
+        })
 
-    // useEffect(() => {
-    //     updateUser()
-    // }, [updateUser])
+        return () => {
+            socket.off("syncState")
+        }
+    }, [])
 
-    // const contextValue = useMemo(() => {
-    //     return {
-    //         user: currentUser === undefined ? null : currentUser,
-    //         updateUser,
-    //         firstRender,
-    //     }
-    // }, [currentUser, updateUser, firstRender])
+    const resyncGame = useCallback(async () => {
+        const pid = localStorage.getItem("pid")
+        if (pid === null) {
+            setCurrentGameState(null)
+            return
+        }
+        
+        socket.emit("reconnect", pid, (data: SocketReturnStatus) => {
+            if (data.status) {
+                console.log("Reconnected")
+            } else {
+                console.log("Failed to reconnect")
+                setCurrentGameState(null)
+                localStorage.removeItem("pid")
+            }
+        })
+    }, [])
 
-    // if (currentUser === undefined) {
-    //     return <></>
-    // }
+    useEffect(() => {
+        resyncGame()
+    }, [resyncGame])
+
+    const contextValue = useMemo(() => {
+        return {
+            gameState: currentGameState,
+            firstRender,
+        }
+    }, [currentGameState, firstRender])
+
+    if (currentGameState === undefined) {
+        return <></>
+    }
 
     return (
         <div id="root">
-            {/* <UserContext.Provider value={contextValue}> */}
+            <SocketContext.Provider value={contextValue}>
                 <motion.div
                     variants={topBarVariants}
                     initial={"hidden"}
@@ -96,7 +122,7 @@ function BasePage(props: { children?: React.ReactNode }) {
                 </motion.div>
 
                 {props.children}
-            {/* </UserContext.Provider> */}
+            </SocketContext.Provider>
         </div>
     )
 }

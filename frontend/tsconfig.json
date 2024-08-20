@@ -15,14 +15,10 @@
         "isolatedModules": true,
         "noEmit": true,
         "jsx": "react-jsx",
-        "plugins": [
-            {
-                "transform": "typia/lib/transform"
-            }
-        ],
         "strictNullChecks": true,
         "paths": {
-            "@/*": ["./src/*"]
+            "@/*": ["./src/*"],
+            "@backend/types/*": ["../backend/src/types/*"]
         }
     },
     "include": [

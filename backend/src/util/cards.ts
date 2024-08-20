@@ -1,4 +1,4 @@
-import { Card } from "types/Card"
+import { Card } from "@/types/Card"
 
 function makeDeck(): Card[] {
     const suits = [0, 1, 2, 3]

@@ -4,6 +4,6 @@ export type CensoredData = {
     id: string
     playerNames: string[]
     numCards: number[]
-    hand: Card[]
+    hand: Card[] | null
     handPoints: number
 }

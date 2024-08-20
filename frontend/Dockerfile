@@ -8,14 +8,15 @@ RUN bun i --frozen-lockfile
 
 FROM base AS build
 
-ARG API_URL=http://localhost:3000/
+ARG SOCKET_URL=http://localhost:3000/
 ARG NODE_ENV=production
 ARG BASE_URL=/bridge
-ENV VITE_API_URL=$API_URL
+ENV VITE_SOCKET_URL=$API_URL
 ENV NODE_ENV=$NODE_ENV
 WORKDIR /app/
 COPY ./frontend .
 COPY ./frontend/vite.config.ts ./vite.config.ts
+COPY ./backend/src/types ./src/backend/types
 COPY --from=dependencies /app/node_modules ./node_modules
 RUN bun run build -- --base $BASE_URL
 

@@ -9,7 +9,7 @@ services:
       dockerfile: ./frontend/Dockerfile
       context: .
       args:
-        API_URL: http://localhost:3001
+        SOCKET_URL: http://localhost:3001
         NODE_ENV: development
         BASE_URL: /
   backend:
