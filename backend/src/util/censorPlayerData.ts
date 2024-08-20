@@ -1,12 +1,16 @@
-import { CensoredData } from "types/CensoredData";
-import { PlayerData } from "types/PlayerData";
+import { CensoredData } from "types/CensoredData"
+import { PlayerData } from "types/PlayerData"
 
-export function censorPlayerData(players: PlayerData[], pid: number): CensoredData {
+export function censorPlayerData(
+    players: Map<string, PlayerData>,
+    playerOrder: string[],
+    pid: string,
+): CensoredData {
     return {
         id: pid,
-        playerIds: players.map(player => player.id),
-        playerNames: players.map(player => player.name),
-        numCards: players.map(player => player.cards.length),
-        hand: players.find(player => player.id === pid)?.cards || []
+        playerNames: playerOrder.map((id) => players.get(id)!.name),
+        numCards: playerOrder.map((id) => players.get(id)!.cards.length),
+        hand: players.get(pid)!.cards || [],
+        handPoints: players.get(pid)!.handPoints,
     }
 }

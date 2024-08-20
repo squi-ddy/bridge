@@ -1,9 +1,9 @@
 import { Card } from "./Card"
 
 export type CensoredData = {
-    id: number,
-    playerIds: number[],
-    playerNames: string[],
-    numCards: number[],
-    hand: Card[] 
+    id: string
+    playerNames: string[]
+    numCards: number[]
+    hand: Card[]
+    handPoints: number
 }
