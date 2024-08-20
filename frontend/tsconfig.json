@@ -22,7 +22,6 @@
         ],
         "strictNullChecks": true,
         "paths": {
-            "@backend/types/*": ["../backend/src/types/*"],
             "@/*": ["./src/*"]
         }
     },

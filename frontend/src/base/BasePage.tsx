@@ -1,16 +1,10 @@
 import { motion } from "framer-motion"
-import MotionLink from "@/components/MotionLink"
-import { getCurrentSession } from "@/api"
 import { createContext, useCallback, useEffect, useMemo, useState } from "react"
-import { IUserMinimal } from "@backend/types/user"
-import NavBar from "@/components/NavBar"
 
-type UserOrNull = IUserMinimal | null
 export const UserContext = createContext<{
-    user: UserOrNull
     updateUser: () => Promise<void>
     firstRender: boolean
-}>({ user: null, updateUser: async () => {}, firstRender: true })
+}>({ updateUser: async () => {}, firstRender: true })
 
 const topBarVariants = {
     visible: {
@@ -41,45 +35,45 @@ const itemVariants = {
 }
 
 function BasePage(props: { children?: React.ReactNode }) {
-    const [currentUser, setCurrentUser] = useState<
-        IUserMinimal | null | undefined
-    >(undefined)
-    const [firstRender, setFirstRender] = useState(true)
+    // const [currentUser, setCurrentUser] = useState<
+    //     null | undefined
+    // >(undefined)
+    // const [firstRender, setFirstRender] = useState(true)
 
-    useEffect(() => {
-        if (currentUser === undefined) {
-            // doesn't count
-            return
-        }
-        if (firstRender) {
-            setFirstRender(false)
-        }
-    }, [currentUser, firstRender])
+    // useEffect(() => {
+    //     if (currentUser === undefined) {
+    //         // doesn't count
+    //         return
+    //     }
+    //     if (firstRender) {
+    //         setFirstRender(false)
+    //     }
+    // }, [currentUser, firstRender])
 
-    const updateUser = useCallback(async () => {
-        const user = await getCurrentSession()
-        setCurrentUser(user)
-    }, [])
+    // const updateUser = useCallback(async () => {
+    //     const user = await getCurrentSession()
+    //     setCurrentUser(user)
+    // }, [])
 
-    useEffect(() => {
-        updateUser()
-    }, [updateUser])
+    // useEffect(() => {
+    //     updateUser()
+    // }, [updateUser])
 
-    const contextValue = useMemo(() => {
-        return {
-            user: currentUser === undefined ? null : currentUser,
-            updateUser,
-            firstRender,
-        }
-    }, [currentUser, updateUser, firstRender])
+    // const contextValue = useMemo(() => {
+    //     return {
+    //         user: currentUser === undefined ? null : currentUser,
+    //         updateUser,
+    //         firstRender,
+    //     }
+    // }, [currentUser, updateUser, firstRender])
 
-    if (currentUser === undefined) {
-        return <></>
-    }
+    // if (currentUser === undefined) {
+    //     return <></>
+    // }
 
     return (
         <div id="root">
-            <UserContext.Provider value={contextValue}>
+            {/* <UserContext.Provider value={contextValue}> */}
                 <motion.div
                     variants={topBarVariants}
                     initial={"hidden"}
@@ -88,25 +82,21 @@ function BasePage(props: { children?: React.ReactNode }) {
                     id="header"
                     className="pt-[20px] bg-gradient-to-r from-sky-900 to-sky-800 w-full mb-[-20px]"
                 >
-                    <div className="px-5 flex items-center justify-items-center p-2 gap-2">
-                        <MotionLink
-                            to="/"
+                    <div className="px-5 flex items-center justify-center p-2 gap-2">
+                        <motion.p
                             variants={itemVariants}
                             initial={"hidden"}
                             animate={"visible"}
                             exit={"exit"}
                             className="text-5xl justify-self-start my-1 font-bold text-orange-400 drop-shadow-md"
                         >
-                            Peerly
-                        </MotionLink>
-
-                        <div className="grow" />
-                        <NavBar />
+                            Bridge
+                        </motion.p>
                     </div>
                 </motion.div>
 
                 {props.children}
-            </UserContext.Provider>
+            {/* </UserContext.Provider> */}
         </div>
     )
 }

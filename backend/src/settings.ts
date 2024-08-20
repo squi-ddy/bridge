@@ -1,5 +1,5 @@
 const settings = {
-    PORT: 3001,
+    PORT: 3000,
     DOMAIN: "localhost",
 }
 

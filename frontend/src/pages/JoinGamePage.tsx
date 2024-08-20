@@ -1,13 +1,9 @@
 import { motion } from "framer-motion"
 import { FaChalkboardTeacher, FaPeopleCarry } from "react-icons/fa"
 import { FaPerson } from "react-icons/fa6"
-import MotionButton from "@/components/MotionButton"
 import SetTitle from "@/components/SetTitle"
 import { useNavigate } from "react-router-dom"
-import SlidingText from "@/components/SlidingText"
-import { useContext } from "react"
-import { UserContext } from "@/base/BasePage"
-import HomePage from "./HomePage"
+import MotionButton from "@/components/MotionButton"
 
 const itemVariants = {
     hidden: { transform: "translateY(-20px)", opacity: 0 },
@@ -18,19 +14,19 @@ const itemVariants = {
 function MainPage() {
     const navigate = useNavigate()
 
-    const { user } = useContext(UserContext)
+    // const { user } = useContext(UserContext)
 
-    if (user) return <HomePage />
+    // if (user) return <HomePage />
 
     return (
         <>
-            <SetTitle title="Peerly" />
+            <SetTitle title="Singapore Bridge" />
             <div className="grow-[2]" />
             <motion.h1 variants={itemVariants} className="text-8xl">
                 A place for
             </motion.h1>
             <motion.div variants={itemVariants}>
-                <SlidingText />
+                {/* <SlidingText /> */}
             </motion.div>
 
             <div className="grow-[3]" />

@@ -11,13 +11,10 @@ export default defineConfig({
             include: [
                 "./src/**/*.ts",
                 "./src/**/*.tsx",
-                "../backend/src/types/*.ts",
             ],
         }),
     ],
-    esbuild: false,
     build: {
         sourcemap: true,
     },
-    base: "/peerly",
 })

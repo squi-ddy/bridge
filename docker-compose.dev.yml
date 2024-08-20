@@ -11,10 +11,11 @@ services:
       args:
         API_URL: http://localhost:3001
         NODE_ENV: development
+        BASE_URL: /
   backend:
     extends:
       file: docker-compose.yml
       service: backend
     ports:
-      - "3001:3001"
+      - "3001:3000"
 

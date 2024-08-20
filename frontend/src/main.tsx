@@ -6,7 +6,7 @@ import App from "./App"
 
 createRoot(document.getElementById("mount") as HTMLElement).render(
     <StrictMode>
-        <BrowserRouter basename="/peerly">
+        <BrowserRouter basename={import.meta.env.BASE_URL}>
             <App />
         </BrowserRouter>
     </StrictMode>,
