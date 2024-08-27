@@ -1,4 +1,3 @@
-import { AnimatePresence, Variants, motion } from "framer-motion"
 import { useCallback, useRef, useState } from "react"
 import {
     InputSubmitFunction,
@@ -6,12 +5,6 @@ import {
     InputCheckFunction,
 } from "@/types/FormDefinition"
 import { useFloating } from "@floating-ui/react"
-
-const errorVariants: Variants = {
-    hidden: { opacity: 0 },
-    visible: { opacity: 1 },
-    exit: { opacity: 0 },
-}
 
 const defaultChecker: InputCheckFunction<number> = () => {
     return { success: true }
@@ -21,7 +14,6 @@ const emptyFunction = () => {}
 
 function FormNumberInput(props: {
     fieldName: string
-    variants?: Variants
     checker?: InputCheckFunction<number>
     fieldPlaceholder: string
     fieldValue?: number
@@ -87,11 +79,9 @@ function FormNumberInput(props: {
     const spanContent = props.fieldPlaceholder + (edit ? "" : fieldValue)
 
     return (
-        <motion.div
-            variants={props.variants}
+        <div
             ref={refs.setReference}
             className={`flex gap-4 items-center ${h} ${z} ${width} min-w-0 justify-center`}
-            layout
         >
             {spanContent && <span className={textSize}>{spanContent}</span>}
             {edit && (
@@ -119,24 +109,18 @@ function FormNumberInput(props: {
                             }
                         }}
                     />
-                    <AnimatePresence mode="wait">
-                        {error && (
-                            <motion.p
-                                variants={errorVariants}
-                                initial="hidden"
-                                animate="visible"
-                                exit="exit"
-                                style={floatingStyles}
-                                ref={refs.setFloating}
-                                className={`mt-2 ${errorTextSize} text-center border-white border bg-red-400 py-1 px-2 rounded-md`}
-                            >
-                                {errorMessage}
-                            </motion.p>
-                        )}
-                    </AnimatePresence>
+                    {error && (
+                        <p
+                            style={floatingStyles}
+                            ref={refs.setFloating}
+                            className={`mt-2 ${errorTextSize} text-center border-white border bg-red-400 py-1 px-2 rounded-md pointer-events-none`}
+                        >
+                            {errorMessage}
+                        </p>
+                    )}
                 </>
             )}
-        </motion.div>
+        </div>
     )
 }
 

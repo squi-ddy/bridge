@@ -9,6 +9,11 @@ export type CensoredGameState = {
     roundStartPlayer: number
     tricksWon: Card[][][]
     playedCards: (Card | null)[]
+    okMoveOn: boolean[]
+    partnerCard: Card | null
+    winningPlayer: number
+    trumpBroken: boolean
+    winningPlayers: number[]
     roomCode: string
-    players: CensoredData
+    playerData: CensoredData
 }

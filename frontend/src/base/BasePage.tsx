@@ -1,49 +1,34 @@
-import { motion } from "framer-motion"
-import { createContext, useCallback, useEffect, useMemo, useState } from "react"
+import {
+    createContext,
+    Dispatch,
+    SetStateAction,
+    useCallback,
+    useEffect,
+    useMemo,
+    useState,
+} from "react"
 import { createSocket } from "@/socket"
 import { CensoredGameState } from "@backend/types/CensoredGameState"
-import { ClientToServerEvents, ServerToClientEvents } from "@backend/types/Socket"
+import {
+    ClientToServerEvents,
+    ServerToClientEvents,
+} from "@backend/types/Socket"
 import { Socket } from "socket.io-client"
 
 export const SocketContext = createContext<{
     gameState: CensoredGameState | null | undefined
+    setGameState?: Dispatch<SetStateAction<CensoredGameState | null>>
     socket?: Socket<ServerToClientEvents, ClientToServerEvents>
     firstRender: boolean
-}>({ gameState: undefined, socket: undefined, firstRender: true })
-
-const topBarVariants = {
-    visible: {
-        transform: "translateY(-20px)",
-    },
-    hidden: {
-        transform: "translateY(-100%)",
-    },
-    exit: {
-        transform: "translateY(-100%)",
-    },
-}
-
-const itemVariants = {
-    visible: {
-        opacity: 1,
-        transform: "translateY(0px)",
-        transition: { duration: 0.3 },
-    },
-    hidden: {
-        opacity: 0,
-        transform: "translateY(-20px)",
-    },
-    exit: {
-        opacity: 0,
-        transform: "translateY(-20px)",
-    },
-}
+}>({ gameState: undefined, firstRender: true })
 
 function BasePage(props: { children?: React.ReactNode }) {
     const [currentGameState, setCurrentGameState] =
         useState<CensoredGameState | null>(null)
     const [firstRender, setFirstRender] = useState(true)
-    const [socket, setSocket] = useState<Socket<ServerToClientEvents, ClientToServerEvents> | undefined>(undefined)
+    const [socket, setSocket] = useState<
+        Socket<ServerToClientEvents, ClientToServerEvents> | undefined
+    >(undefined)
 
     useEffect(() => {
         if (currentGameState === undefined) {
@@ -100,6 +85,7 @@ function BasePage(props: { children?: React.ReactNode }) {
     const contextValue = useMemo(() => {
         return {
             gameState: currentGameState,
+            setGameState: setCurrentGameState,
             socket,
             firstRender,
         }
@@ -112,26 +98,13 @@ function BasePage(props: { children?: React.ReactNode }) {
     return (
         <div id="root">
             <SocketContext.Provider value={contextValue}>
-                <motion.div
-                    variants={topBarVariants}
-                    initial={"hidden"}
-                    animate={"visible"}
-                    exit={"exit"}
-                    id="header"
-                    className="pt-[20px] bg-gradient-to-r from-sky-900 to-sky-800 w-full mb-[-20px]"
-                >
+                <div className="bg-gradient-to-r from-sky-900 to-sky-800 w-full">
                     <div className="px-5 flex items-center justify-center p-2 gap-2">
-                        <motion.p
-                            variants={itemVariants}
-                            initial={"hidden"}
-                            animate={"visible"}
-                            exit={"exit"}
-                            className="text-5xl justify-self-start my-1 font-bold text-orange-400 drop-shadow-md"
-                        >
+                        <p className="text-5xl justify-self-start my-1 font-bold text-orange-400 drop-shadow-md">
                             Bridge
-                        </motion.p>
+                        </p>
                     </div>
-                </motion.div>
+                </div>
 
                 {props.children}
             </SocketContext.Provider>

@@ -10,7 +10,7 @@ const games = new Map<string, Game>()
 const pidToGid = new Map<string, string>()
 
 export function onConnection(socket: Socket<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>) {
-    socket.data = { gid: "", pid: "" }
+    socket.data = { pid: "" }
 
     socket.on(
         "joinGame",
@@ -26,7 +26,7 @@ export function onConnection(socket: Socket<ClientToServerEvents, ServerToClient
             pidToGid.set(pid, gid)
             const status = game.addPlayer(socket, pid, name)
             if (status === 0) {
-                socket.data = { gid, pid }
+                socket.data = { pid }
                 return callback({ status: true, data: pid })
             } else {
                 return callback({ status: false, code: status })
@@ -34,8 +34,8 @@ export function onConnection(socket: Socket<ClientToServerEvents, ServerToClient
         },
     )
 
-    socket.on("leaveGame", (pid: string, callback: (data: SocketReturnStatus) => void):void => {
-        const gid = pidToGid.get(pid)
+    socket.on("leaveGame", (callback: (data: SocketReturnStatus) => void):void => {
+        const gid = pidToGid.get(socket.data.pid)
         if (!gid) {
             return callback({ status: false })
         }
@@ -43,12 +43,10 @@ export function onConnection(socket: Socket<ClientToServerEvents, ServerToClient
         if (!game) {
             return callback({ status: false })
         }
-        if (game.getPlayerSocket(pid) !== socket) {
-            return callback({ status: false })
-        }
-        if (game.removePlayer(pid)) {
-            pidToGid.delete(pid)
-            socket.data = { gid: "", pid: "" }
+        if (game.removePlayer(socket.data.pid)) {
+            pidToGid.delete(socket.data.pid)
+            socket.data = { pid: "" }
+            if (game.isEmpty()) games.delete(gid)
             return callback({ status: true })
         } else {
             return callback({ status: false })
@@ -66,31 +64,40 @@ export function onConnection(socket: Socket<ClientToServerEvents, ServerToClient
         }
         const status = game.resyncSocket(pid, socket)
         if (status === 2) {
-            socket.data = { gid, pid }
+            socket.data = { pid }
         }
         return callback({ status: true, data: status })
     })
 
-    socket.on("rearrange", (pid: string, rel: number, callback: (data: SocketReturnStatus) => void): void => {
-        const gid = pidToGid.get(pid)
+    socket.on("rearrange", (rel: number): void => {
+        const gid = pidToGid.get(socket.data.pid)
         if (!gid) {
-            return callback({ status: false })
+            return
         }
         const game = games.get(gid)
         if (!game) {
-            return callback({ status: false })
-        }
-        if (game.getPlayerSocket(pid) !== socket) {
-            return callback({ status: false })
+            return
         }
         if (rel !== -1 && rel !== 1) {
             return
         }
-        return callback({ status: game.movePlayer(pid, rel) })
+        game.movePlayer(socket.data.pid, rel)
     })
 
-    socket.on("toggleStartGame", (pid: string, callback: (data: SocketReturnStatus) => void): void => {
-        const gid = pidToGid.get(pid)
+    socket.on("toggleStartGame", (): void => {
+        const gid = pidToGid.get(socket.data.pid)
+        if (!gid) {
+            return
+        }
+        const game = games.get(gid)
+        if (!game) {
+            return
+        }
+        game.toggleToStart(socket.data.pid)
+    })
+
+    socket.on("submitWash", (accept: boolean, callback: (data: SocketReturnStatus) => void): void => {
+        const gid = pidToGid.get(socket.data.pid)
         if (!gid) {
             return callback({ status: false })
         }
@@ -98,14 +105,11 @@ export function onConnection(socket: Socket<ClientToServerEvents, ServerToClient
         if (!game) {
             return callback({ status: false })
         }
-        if (game.getPlayerSocket(pid) !== socket) {
-            return callback({ status: false })
-        }
-        return callback({ status: game.toggleToStart(pid) })
+        return callback({ status: game.submitWash(socket.data.pid, accept) })
     })
 
-    socket.on("submitWash", (pid: string, callback: (data: SocketReturnStatus) => void): void => {
-        const gid = pidToGid.get(pid)
+    socket.on("submitBet", (bet: Bet | null, callback: (data: SocketReturnStatus) => void): void => {
+        const gid = pidToGid.get(socket.data.pid)
         if (!gid) {
             return callback({ status: false })
         }
@@ -113,31 +117,13 @@ export function onConnection(socket: Socket<ClientToServerEvents, ServerToClient
         if (!game) {
             return callback({ status: false })
         }
-        if (game.getPlayerSocket(pid) !== socket) {
-            return callback({ status: false })
-        }
-        return callback({ status: game.submitWash(pid) })
-    })
-
-    socket.on("submitBet", (pid: string, bet: Bet, callback: (data: SocketReturnStatus) => void): void => {
-        const gid = pidToGid.get(pid)
-        if (!gid) {
-            return callback({ status: false })
-        }
-        const game = games.get(gid)
-        if (!game) {
-            return callback({ status: false })
-        }
-        if (game.getPlayerSocket(pid) !== socket) {
-            return callback({ status: false })
-        }
-        return callback({ status: game.submitBet(pid, bet) })
+        return callback({ status: game.submitBet(socket.data.pid, bet) })
     })
 
     socket.on(
-        "choosePartnerSubmit",
-        (pid: string, card: Card, callback: (data: SocketReturnStatus) => void): void => {
-            const gid = pidToGid.get(pid)
+        "submitPartner",
+        (card: Card, callback: (data: SocketReturnStatus) => void): void => {
+            const gid = pidToGid.get(socket.data.pid)
             if (!gid) {
                 return callback({ status: false })
             }
@@ -145,15 +131,12 @@ export function onConnection(socket: Socket<ClientToServerEvents, ServerToClient
             if (!game) {
                 return callback({ status: false })
             }
-            if (game.getPlayerSocket(pid) !== socket) {
-                return callback({ status: false })
-            }
-            return callback({ status: game.choosePartnerSubmit(pid, card) })
+            return callback({ status: game.submitPartner(socket.data.pid, card) })
         },
     )
 
-    socket.on("playCard", (pid: string, card: Card, callback: (data: SocketReturnStatus) => void): void => {
-        const gid = pidToGid.get(pid)
+    socket.on("playCard", (card: Card, callback: (data: SocketReturnStatus) => void): void => {
+        const gid = pidToGid.get(socket.data.pid)
         if (!gid) {
             return callback({ status: false })
         }
@@ -161,15 +144,28 @@ export function onConnection(socket: Socket<ClientToServerEvents, ServerToClient
         if (!game) {
             return callback({ status: false })
         }
-        if (game.getPlayerSocket(pid) !== socket) {
+        return callback({ status: game.playCard(socket.data.pid, card) })
+    })
+
+    socket.on("submitMoveOn", (callback: (data: SocketReturnStatus) => void): void => {
+        const gid = pidToGid.get(socket.data.pid)
+        if (!gid) {
             return callback({ status: false })
         }
-        return callback({ status: game.playCard(pid, card) })
+        const game = games.get(gid)
+        if (!game) {
+            return callback({ status: false })
+        }
+        return callback({ status: game.submitMoveOn(socket.data.pid) })
     })
 
     socket.on("disconnect", () => {
         if (socket.data) {
-            const { gid, pid } = socket.data
+            const { pid } = socket.data
+            const gid = pidToGid.get(pid)
+            if (!gid) {
+                return
+            }
             const game = games.get(gid)
             if (game) {
                 game.removeSocket(pid)

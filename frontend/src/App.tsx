@@ -1,10 +1,8 @@
-import { AnimatePresence } from "framer-motion"
-import { useLocation, useRoutes } from "react-router-dom"
+import { useRoutes } from "react-router-dom"
 import BasePage from "./base/BasePage"
-import MotionBase from "./base/MotionBase"
 import JoinGamePage from "./pages/JoinGamePage"
 import Page404 from "./pages/Page404"
-import LobbyPage from "./pages/LobbyPage"
+import GamePageRouter from "./pages/GamePageRouter"
 
 const routes = [
     {
@@ -13,7 +11,7 @@ const routes = [
     },
     {
         path: "room/:roomCode",
-        element: <LobbyPage />,
+        element: <GamePageRouter />,
     },
     {
         path: "*",
@@ -21,26 +19,12 @@ const routes = [
     },
 ]
 
-const routeKeys = {
-    "/": "main",
-} as Record<string, string | undefined>
-
 function App() {
-    const location = useLocation()
-
     const element = useRoutes(routes)
 
     if (!element) return null
 
-    return (
-        <BasePage>
-            <AnimatePresence mode="wait">
-                <MotionBase key={routeKeys[location.pathname] ?? "404"}>
-                    {element}
-                </MotionBase>
-            </AnimatePresence>
-        </BasePage>
-    )
+    return <BasePage>{element}</BasePage>
 }
 
 export default App

@@ -10,20 +10,19 @@ export interface ServerToClientEvents {
 
 export interface ClientToServerEvents {
     joinGame: (gid: string, name: string, callback: (data: SocketReturnData<string>) => void) => void
-    leaveGame: (pid: string, callback: (data: SocketReturnStatus) => void) => void
+    leaveGame: (callback: (data: SocketReturnStatus) => void) => void
     reconnect: (pid: string, callback: (data: SocketReturnData<number>) => void) => void 
-    rearrange: (pid: string, rel: number, callback: (data: SocketReturnStatus) => void) => void
-    toggleStartGame: (pid: string, callback: (data: SocketReturnStatus) => void) => void
-    submitWash: (pid: string, callback: (data: SocketReturnStatus) => void) => void
-    submitBet: (pid: string, bet: Bet, callback: (data: SocketReturnStatus) => void) => void
-    choosePartnerSubmit: (pid: string, card: Card, callback: (data: SocketReturnStatus) => void) => void
-    playCard: (pid: string, card: Card, callback: (data: SocketReturnStatus) => void) => void
-    
+    rearrange: (rel: number) => void
+    toggleStartGame: () => void
+    submitWash: (accept: boolean, callback: (data: SocketReturnStatus) => void) => void
+    submitBet: (bet: Bet | null, callback: (data: SocketReturnStatus) => void) => void
+    submitPartner: (card: Card, callback: (data: SocketReturnStatus) => void) => void
+    playCard: (card: Card, callback: (data: SocketReturnStatus) => void) => void
+    submitMoveOn: (callback: (data: SocketReturnStatus) => void) => void
 }
 
 export interface InterServerEvents {}
 
 export interface SocketData {
-    gid: string
     pid: string
 }

@@ -4,18 +4,23 @@ import { Card } from "@/types/Card"
 import { CensoredGameState } from "@/types/CensoredGameState"
 import { PlayerData } from "@/types/PlayerData"
 import { censorPlayerData, dedupeName } from "@/util/players"
-import { calculateWash, dealHands } from "@/util/cards"
+import { calculateWash, dealHands, isCardValid } from "@/util/cards"
 
 export class Game {
     roomCode: string
     players: Map<string, PlayerData>
     playerOrder: string[]
-    gameState: number // 0 = waiting, 1 = wait for wash, 2 = betting, 3 = choose partner, 4 = playing
+    gameState: number // 0 = waiting, 1 = wait for wash, 2 = betting, 3 = choose partner, 4 = playing, 5 = round end, 6 = winner!
     currentBet: Bet
     currentActivePlayer: number
     roundStartPlayer: number
     tricksWon: Card[][][]
     playedCards: (Card | null)[]
+    okMoveOn: boolean[]
+    partnerCard: Card | null
+    winningPlayer: number
+    trumpBroken: boolean
+    winningTeam: number
 
     constructor(roomCode: string) {
         this.roomCode = roomCode
@@ -25,16 +30,17 @@ export class Game {
         this.currentBet = {
             contract: 0,
             suit: 4,
-            pid: "",
+            order: -1,
         }
         this.currentActivePlayer = -1
         this.roundStartPlayer = -1
         this.tricksWon = [[], [], [], []]
         this.playedCards = [null, null, null, null]
-    }
-
-    getPlayerSocket(pid: string) {
-        return this.players.get(pid)?.socket
+        this.okMoveOn = [false, false, false, false]
+        this.partnerCard = null
+        this.winningPlayer = -1
+        this.trumpBroken = false
+        this.winningTeam = -1
     }
 
     addPlayer(socket: Socket, pid: string, name: string): number {
@@ -75,41 +81,56 @@ export class Game {
         return true
     }
 
-    movePlayer(pid: string, rel: number): boolean {
+    isEmpty(): boolean {
+        return this.players.size === 0
+    }
+
+    movePlayer(pid: string, rel: number): void {
         // rel +1 -> move down, rel -1 -> move up
         if (this.gameState !== 0) {
-            return false
+            return
         }
         const playerIndex = this.playerOrder.findIndex((id) => id === pid)
         if (
             playerIndex + rel < 0 ||
             playerIndex + rel >= this.playerOrder.length
         ) {
-            return false
+            return
         }
         this.playerOrder[playerIndex] = this.playerOrder[playerIndex + rel]
         this.playerOrder[playerIndex + rel] = pid
         for (const player of this.players.values()) {
             player.socket?.emit("syncState", this.getFullState(player.id))
         }
-        return true
     }
 
     resetState() {
         this.currentBet = {
             contract: 0,
             suit: 4,
-            pid: "",
+            order: -1,
         }
         this.currentActivePlayer = -1
         this.roundStartPlayer = -1
         this.tricksWon = [[], [], [], []]
         this.playedCards = [null, null, null, null]
+        this.okMoveOn = [false, false, false, false]
+        this.partnerCard = null
+        this.winningPlayer = -1
+        this.trumpBroken = false
+        this.winningTeam = -1
+        this.players.forEach((player) => {
+            player.team = 0
+            player.cards = []
+            player.handPoints = 0
+            player.team = 0
+            player.okToStart = false
+        })
     }
 
-    toggleToStart(pid: string): boolean {
+    toggleToStart(pid: string): void {
         if (this.gameState !== 0) {
-            return false
+            return
         }
         const player = this.players.get(pid)
         if (player) {
@@ -121,27 +142,32 @@ export class Game {
                 )
             ) {
                 this.startGame()
-                return true
+                return
             }
             for (const player of this.players.values()) {
                 player.socket?.emit("syncState", this.getFullState(player.id))
             }
         }
-        return true
+        return
     }
 
-    startGame() {
-        if (this.players.size !== 4 || this.gameState !== 0) {
+    startGame(deal: boolean = true) {
+        if (this.players.size !== 4 || (this.gameState !== 0 && this.gameState !== 1)) {
             return
         }
 
         this.gameState = 1
-        this.resetState()
-        const hands = dealHands()
+        let hands: Card[][]
+        if (deal) {
+            this.resetState()
+            hands = dealHands()
+        } else {
+            hands = Array.from(this.players.values()).map((player) => player.cards)
+        }
         let lowestScore = 5
         for (let i = 0; i < 4; i++) {
             this.players.get(this.playerOrder[i])!.cards = hands[i]
-            const handPoints = calculateWash(hands[i])
+            const handPoints = deal ? calculateWash(hands[i]) : this.players.get(this.playerOrder[i])!.handPoints
             this.players.get(this.playerOrder[i])!.handPoints = handPoints
             lowestScore = Math.min(lowestScore, handPoints)
         }
@@ -160,16 +186,18 @@ export class Game {
         }
     }
 
-    submitWash(pid: string): boolean {
+    submitWash(pid: string, acceptWash: boolean): boolean {
         if (this.gameState !== 1 || this.players.get(pid)!.handPoints > 4) {
             return false
         }
 
-        for (const player of this.players.values()) {
-            player.socket?.emit("syncState", this.getFullState(player.id))
+        if (acceptWash) {
+            this.startGame()
+        } else {
+            this.players.get(pid)!.handPoints = 5
+            this.startGame(false)
         }
 
-        this.startGame()
         return true
     }
 
@@ -184,10 +212,7 @@ export class Game {
 
         this.currentActivePlayer = (this.currentActivePlayer + 1) % 4
         if (!bet) {
-            const player = this.players.get(
-                this.playerOrder[this.currentActivePlayer],
-            )!
-            if (player.id === this.currentBet.pid) {
+            if (this.currentActivePlayer === this.currentBet.order) {
                 this.choosePartner()
                 return true
             }
@@ -198,8 +223,8 @@ export class Game {
         }
 
         if (
-            bet.contract < this.currentBet.contract ||
-            bet.suit < this.currentBet.suit
+            bet.contract < this.currentBet.contract || (bet.contract === this.currentBet.contract &&
+            bet.suit <= this.currentBet.suit)
         ) {
             return false
         }
@@ -213,17 +238,18 @@ export class Game {
 
     choosePartner() {
         this.gameState = 3
-        this.currentActivePlayer = -1
 
         for (const player of this.players.values()) {
             player.socket?.emit("syncState", this.getFullState(player.id))
         }
     }
 
-    choosePartnerSubmit(pid: string, partnerCard: Card): boolean {
-        if (this.gameState !== 3 || this.currentBet.pid !== pid) {
+    submitPartner(pid: string, partnerCard: Card): boolean {
+        if (this.gameState !== 3) {
             return false
         }
+
+        this.partnerCard = partnerCard
 
         let partner
         for (const player of this.players.values()) {
@@ -252,9 +278,7 @@ export class Game {
 
         this.gameState = 4
 
-        let startingPlayer = this.playerOrder.findIndex(
-            (id) => id === this.currentBet.pid,
-        )
+        let startingPlayer = this.currentBet.order
         if (this.currentBet.suit !== 4) {
             startingPlayer = (startingPlayer + 1) % 4
         }
@@ -290,15 +314,19 @@ export class Game {
             return false
         }
 
-        this.playedCards[this.currentActivePlayer] = card
-        const firstPlayedCard = this.playedCards[this.roundStartPlayer]!
-        if (
-            card.suit !== firstPlayedCard.suit &&
-            player.cards.some((c) => c.suit === firstPlayedCard.suit)
-        ) {
-            // illegal play
+        const cardIndex = player.cards.findIndex(
+            (c) => c.value === card.value && c.suit === card.suit,
+        )
+
+        if (!isCardValid(player.cards, cardIndex, this.trumpBroken, this.currentBet.suit, this.playedCards[this.roundStartPlayer])) {
             return false
         }
+
+        if (card.suit === this.currentBet.suit) {
+            this.trumpBroken = true
+        }
+
+        this.playedCards[this.currentActivePlayer] = card
 
         player.cards = player.cards.filter(
             (c) => c.value !== card.value || c.suit !== card.suit,
@@ -326,7 +354,7 @@ export class Game {
 
         let winningPlayer = this.roundStartPlayer
         let winningCard = this.playedCards[winningPlayer]!
-        for (let i = 1; i < 4; i++) {
+        for (let i = 0; i < 4; i++) {
             const card = this.playedCards[i]!
             if (
                 card.suit === this.currentBet.suit &&
@@ -344,8 +372,9 @@ export class Game {
             }
         }
 
-        this.currentActivePlayer = winningPlayer
-        this.roundStartPlayer = winningPlayer
+        this.winningPlayer = winningPlayer
+        this.currentActivePlayer = -1
+
         this.tricksWon[winningPlayer].push(this.playedCards as Card[])
 
         let team1Tricks = 0
@@ -361,18 +390,49 @@ export class Game {
         }
 
         if (team1Tricks === 6 + this.currentBet.contract) {
-            this.endGame(1)
-            return
+            this.winningTeam = 1
         } else if (team2Tricks === 8 - this.currentBet.contract) {
             // 13 - (6 + this.currentBet.contract) + 1 = 8 - this.currentBet.contract
-            this.endGame(2)
-            return
+            this.winningTeam = 2
         }
 
-        this.playedCards = [null, null, null, null]
+        if (this.winningTeam === -1) {
+            this.gameState = 5
+        } else {
+            this.gameState = 6
+        }
+
         for (const player of this.players.values()) {
             player.socket?.emit("syncState", this.getFullState(player.id))
         }
+    }
+
+    submitMoveOn(pid: string): boolean {
+        if (this.gameState !== 5 && this.gameState !== 6) {
+            return false
+        }
+
+        const playerIndex = this.playerOrder.findIndex((id) => id === pid)
+        this.okMoveOn[playerIndex] = true
+
+        if (this.okMoveOn.every((ok) => ok)) {
+            if (this.gameState === 5) {
+                this.gameState = 4
+                this.okMoveOn = [false, false, false, false]
+                this.playedCards = [null, null, null, null]
+                this.currentActivePlayer = this.winningPlayer
+                this.roundStartPlayer = this.winningPlayer
+            } else {
+                this.resetState()
+                this.gameState = 0
+            }
+        }
+
+        for (const player of this.players.values()) {
+            player.socket?.emit("syncState", this.getFullState(player.id))
+        }
+
+        return true
     }
 
     endGame(winningTeam: number) {
@@ -418,7 +478,12 @@ export class Game {
             tricksWon: this.tricksWon,
             playedCards: this.playedCards,
             roomCode: this.roomCode,
-            players: censorPlayerData(this.players, this.playerOrder, pid),
+            partnerCard: this.partnerCard,
+            okMoveOn: this.okMoveOn,
+            winningPlayer: this.winningPlayer,
+            trumpBroken: this.trumpBroken,
+            winningPlayers: this.winningTeam !== -1 ? this.playerOrder.map((pid, idx) => ({player: this.players.get(pid)!, order: idx})).filter((player) => player.player.team === this.winningTeam).map(player => player.order) : [],
+            playerData: censorPlayerData(this.players, this.playerOrder, pid, this.trumpBroken, this.currentBet.suit, this.roundStartPlayer > 0 ? this.playedCards[this.roundStartPlayer] : null),
         }
     }
 }

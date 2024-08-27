@@ -1,4 +1,3 @@
-import { motion } from "framer-motion"
 import { HTMLAttributes, forwardRef } from "react"
 
 const Button = forwardRef(function Button(
@@ -40,6 +39,4 @@ const Button = forwardRef(function Button(
     )
 })
 
-const MotionButton = motion(Button)
-
-export default MotionButton
+export default Button

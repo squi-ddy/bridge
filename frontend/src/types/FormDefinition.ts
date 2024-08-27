@@ -1,6 +1,4 @@
-import FormCheckboxInput from "@/components/forms/FormCheckboxInput"
 import FormNumberInput from "@/components/forms/FormNumberInput"
-import FormPasswordInput from "@/components/forms/FormPasswordInput"
 import FormTextInput from "@/components/forms/FormTextInput"
 import { ReactElement } from "react"
 
@@ -24,8 +22,5 @@ export type InputFunctionContainer<T extends readonly string[]> = Record<
 >
 
 export type FormInput = ReactElement<
-    | typeof FormTextInput
-    | typeof FormPasswordInput
-    | typeof FormNumberInput
-    | typeof FormCheckboxInput
+    typeof FormTextInput | typeof FormNumberInput
 >
