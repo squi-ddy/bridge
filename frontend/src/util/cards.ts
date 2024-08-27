@@ -43,7 +43,7 @@ export const cardValueToHumanStr = [
 ]
 
 export function cardToCardURL(card: Card): string {
-    return `/cards/${cardSuitToStr[card.suit]}-${
+    return `${import.meta.env.BASE_URL}/cards/${cardSuitToStr[card.suit]}-${
         cardValueToStr[card.value]
     }.svg`
 }

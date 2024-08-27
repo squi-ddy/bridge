@@ -25,22 +25,24 @@ function RoundEndStage() {
         <>
             <p className="text-2xl">{`Bet: ${currentBet.contract} ${
                 cardSuitToHumanStr[currentBet.suit]
-            } by ${gameState?.playerData.playerNames[
-                currentBet.order
-            ]}`}</p>
+            } by ${gameState?.playerData.playerNames[currentBet.order]}`}</p>
             <p className="text-2xl">{`Partner is the ${
                 cardValueToHumanStr[gameState!.partnerCard!.value - 2]
             } of ${cardSuitToHumanStr[gameState!.partnerCard!.suit]}`}</p>
-            <p className="text-3xl">{`${gameState?.playerData.playerNames[gameState?.winningPlayer]} won this trick!`}</p>
-            <PlayingStageCards
-                cards={cardsPlayed}
-                playerNames={playerNames}
+            <p className="text-3xl">{`${gameState?.playerData.playerNames[
+                gameState?.winningPlayer
+            ]} won this trick!`}</p>
+            <PlayingStageCards cards={cardsPlayed} playerNames={playerNames} />
+            <Button
+                text="Next"
+                onClick={() => {
+                    socket?.emitWithAck("submitMoveOn")
+                    setSubmittedMoveOn(true)
+                }}
             />
-            <Button text="Next" onClick={() => {
-                socket?.emitWithAck("submitMoveOn")
-                setSubmittedMoveOn(true)
-                }} />
-                {submittedMoveOn && <p className="text-2xl">Waiting for other players...</p>}
+            {submittedMoveOn && (
+                <p className="text-2xl">Waiting for other players...</p>
+            )}
         </>
     )
 }
