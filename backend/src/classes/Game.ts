@@ -424,6 +424,7 @@ export class Game {
                 this.roundStartPlayer = this.winningPlayer
             } else {
                 this.resetState()
+                this.playerOrder = this.playerOrder.slice(1).concat([this.playerOrder[0]])
                 this.gameState = 0
             }
         }
@@ -433,20 +434,6 @@ export class Game {
         }
 
         return true
-    }
-
-    endGame(winningTeam: number) {
-        for (const { socket } of this.players.values()) {
-            socket?.emit(
-                "endGame",
-                Array.from(this.players.values())
-                    .filter((player) => player.team === winningTeam)
-                    .map((player) => player.id),
-            )
-        }
-
-        this.resetState()
-        this.gameState = 0
     }
 
     resyncSocket(pid: string, socket: Socket): number {
