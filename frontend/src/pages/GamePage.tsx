@@ -43,7 +43,7 @@ function GamePage() {
                 gameState?.gameState === 4
             ) {
                 return idx === gameState?.currentActivePlayer
-            } else if (gameState?.gameState === 5) {
+            } else if (gameState?.gameState === 5 || gameState?.gameState === 6) {
                 return !gameState?.okMoveOn[idx]
             }
         },
