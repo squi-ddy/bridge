@@ -10,6 +10,7 @@ services:
       context: .
       args:
         SOCKET_URL: http://localhost:3001
+        SOCKET_SERVER_PATH: /
         NODE_ENV: development
         BASE_URL: /
   backend:
