@@ -4,7 +4,8 @@ services:
       dockerfile: ./frontend/Dockerfile
       context: .
       args:
-        SOCKET_URL: https://api.squiddy.me/bridge
+        SOCKET_URL: https://api.squiddy.me
+        SOCKET_SERVER_PATH: /bridge/
     restart: unless-stopped
   backend:
     build: ./backend
