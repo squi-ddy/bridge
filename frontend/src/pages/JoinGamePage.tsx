@@ -63,7 +63,7 @@ function JoinGamePage() {
             <SetTitle title="Bridge" />
 
             <div className="flex flex-col gap-4 justify-center items-center grow w-full">
-                <div className="flex flex-col gap-4 justify-center items-center  border-2 rounded-xl p-4 w-1/3">
+                <div className="flex flex-col gap-4 justify-center items-center  border-2 rounded-xl p-4 w-5/6 lg:w-1/3">
                     <FormTextInput
                         fieldName="room-code"
                         fieldPrefix="Room Code"
