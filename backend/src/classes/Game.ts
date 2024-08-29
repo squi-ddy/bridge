@@ -470,7 +470,7 @@ export class Game {
             winningPlayer: this.winningPlayer,
             trumpBroken: this.trumpBroken,
             winningPlayers: this.winningTeam !== -1 ? this.playerOrder.map((pid, idx) => ({player: this.players.get(pid)!, order: idx})).filter((player) => player.player.team === this.winningTeam).map(player => player.order) : [],
-            playerData: censorPlayerData(this.players, this.playerOrder, pid, this.trumpBroken, this.currentBet.suit, this.roundStartPlayer > 0 ? this.playedCards[this.roundStartPlayer] : null),
+            playerData: censorPlayerData(this.players, this.playerOrder, pid, this.trumpBroken, this.currentBet.suit, this.roundStartPlayer >= 0 ? this.playedCards[this.roundStartPlayer] : null),
         }
     }
 }
