@@ -1,6 +1,7 @@
 # Bridge
 
-Singaporean Bridge, now on the web. Find it at <https://squiddy.me/bridge>!
+Singaporean Bridge, now on the web.\
+Find it at <https://squiddy.me/bridge>!
 
 ## Getting Started
 
