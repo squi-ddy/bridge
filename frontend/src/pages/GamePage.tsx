@@ -141,7 +141,7 @@ function GamePage() {
                                     card.valid
                                         ? "hover:-translate-y-5"
                                         : ""
-                                } transition-transform duration-100`}
+                                } transition-transform duration-100 ${gameState.gameState === 4 && !card.valid ? 'opacity-50' : ''}`}
                                 onClick={() => {
                                     if (card.valid) playCard(card.card)
                                 }}
