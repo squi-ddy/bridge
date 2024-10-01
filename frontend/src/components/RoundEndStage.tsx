@@ -1,5 +1,5 @@
 import { SocketContext } from "@/base/BasePage"
-import { useContext, useEffect, useState } from "react"
+import { useContext, useEffect, useState, useCallback } from "react"
 import PlayingStageCards from "./PlayingStageCards"
 import { cardSuitToHumanStr, cardValueToHumanStr } from "@/util/cards"
 import { Card } from "@backend/types/Card"
@@ -21,16 +21,16 @@ function RoundEndStage() {
         (idx) => gameState!.playerData.playerNames[(startingPlayer + idx) % 4],
     )
 
-    const confirmation = () => {
+    const confirmation = useCallback(() => {
         socket?.emitWithAck("submitMoveOn")
         setSubmittedMoveOn(true)
-    } 
+    }, [socket])
 
     useEffect(() => {
-        const timer = setTimeout(confirmation, 5000);    
+        const timer = setTimeout(confirmation, 5000) 
         // Cleanup the timer when the component unmounts
-        return () => clearTimeout(timer);
-    }, []);
+        return () => clearTimeout(timer)
+    }, [])
 
     return (
         <>
