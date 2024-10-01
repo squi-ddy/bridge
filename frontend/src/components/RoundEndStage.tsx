@@ -1,5 +1,5 @@
 import { SocketContext } from "@/base/BasePage"
-import { useContext, useState } from "react"
+import { useContext, useEffect, useState } from "react"
 import PlayingStageCards from "./PlayingStageCards"
 import { cardSuitToHumanStr, cardValueToHumanStr } from "@/util/cards"
 import { Card } from "@backend/types/Card"
@@ -21,6 +21,17 @@ function RoundEndStage() {
         (idx) => gameState!.playerData.playerNames[(startingPlayer + idx) % 4],
     )
 
+    const confirmation = () => {
+        socket?.emitWithAck("submitMoveOn")
+        setSubmittedMoveOn(true)
+    } 
+
+    useEffect(() => {
+        const timer = setTimeout(confirmation, 5000);    
+        // Cleanup the timer when the component unmounts
+        return () => clearTimeout(timer);
+    }, []);
+
     return (
         <>
             <p className="text-2xl">{`Bet: ${currentBet.contract} ${
@@ -35,10 +46,7 @@ function RoundEndStage() {
             <PlayingStageCards cards={cardsPlayed} playerNames={playerNames} />
             <Button
                 text="Next"
-                onClick={() => {
-                    socket?.emitWithAck("submitMoveOn")
-                    setSubmittedMoveOn(true)
-                }}
+                onClick={confirmation}
             />
             {submittedMoveOn && (
                 <p className="text-2xl">Waiting for other players...</p>
