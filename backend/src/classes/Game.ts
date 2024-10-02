@@ -112,6 +112,7 @@ export class Game {
             suit: 4,
             order: -1,
         }
+        this.betHistory = []
         this.currentActivePlayer = -1
         this.roundStartPlayer = -1
         this.tricksWon = [[], [], [], []]
