@@ -22,6 +22,17 @@ export const SocketContext = createContext<{
     firstRender: boolean
 }>({ gameState: undefined, firstRender: true })
 
+interface GlobalState {
+    balatro: boolean
+}
+
+interface GlobalContextType {
+    globalContext: GlobalState
+    setGlobalContext: (globalcontext: GlobalState) => void
+}
+
+export const GlobalContext = createContext<GlobalContextType | undefined>(undefined)
+
 function BasePage(props: { children?: React.ReactNode }) {
     const [currentGameState, setCurrentGameState] =
         useState<CensoredGameState | null>(null)
@@ -82,7 +93,7 @@ function BasePage(props: { children?: React.ReactNode }) {
         resyncGame()
     }, [resyncGame])
 
-    const contextValue = useMemo(() => {
+    const socketContextValue = useMemo(() => {
         return {
             gameState: currentGameState,
             setGameState: setCurrentGameState,
@@ -91,23 +102,29 @@ function BasePage(props: { children?: React.ReactNode }) {
         }
     }, [currentGameState, socket, firstRender])
 
+    const [ globalContext, setGlobalContext ] = useState({ balatro: false })
+
     if (currentGameState === undefined) {
         return <></>
     }
 
     return (
         <div id="root">
-            <SocketContext.Provider value={contextValue}>
+            <GlobalContext.Provider value={{globalContext, setGlobalContext}}>
+            <SocketContext.Provider value={socketContextValue}>
                 <div className="bg-gradient-to-r from-sky-900 to-sky-800 w-full">
                     <div className="px-5 flex items-center justify-center p-2 gap-2">
                         <p className="text-5xl justify-self-start my-1 font-bold text-orange-400 drop-shadow-md">
-                            Bridge
+                            <span onClick={() => 
+                                setGlobalContext((prev) => { return { ...prev, balatro: !prev.balatro }})
+                            }>B</span>ridge
                         </p>
                     </div>
                 </div>
 
                 {props.children}
             </SocketContext.Provider>
+            </GlobalContext.Provider>
         </div>
     )
 }

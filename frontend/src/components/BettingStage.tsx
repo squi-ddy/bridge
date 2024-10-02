@@ -1,24 +1,45 @@
 import { SocketContext } from "@/base/BasePage"
 import { useCallback, useContext } from "react"
 import Button from "./Button"
-import { cardSuitToHumanStr } from "@/util/cards"
+import { cardSuitToHumanStr, cardSuitToSymbol } from "@/util/cards"
 
 function BettingStage() {
     const { gameState, socket } = useContext(SocketContext)
 
     const currentBet = gameState!.currentBet
 
-    const getBet = useCallback(
-        (suit: number) => {
-            return {
-                contract:
-                    currentBet.contract + (currentBet.suit >= suit ? 1 : 0),
-                suit: suit,
-                order: gameState!.playerData.order,
-            }
-        },
-        [gameState, currentBet],
-    )
+    const rangeOfBets : number[] = []
+    for (let i = Math.max(1, currentBet.contract); i<=7;i++){
+        rangeOfBets.push(i)
+    }
+
+    const createBettingRow = (contract: number) => {
+        return [0, 1, 2, 3, 4].map((suit) => {
+            return <td key={suit}>
+                <Button
+                    text={`${contract}${cardSuitToSymbol[suit]}`}
+                    textSize="text-xl"
+                    disabled={contract == gameState!.currentBet.contract && suit <= gameState!.currentBet.suit}
+                    onClick={() =>
+                        socket?.emitWithAck(
+                            "submitBet",
+                            {
+                                contract: contract,
+                                suit: suit,
+                                order: gameState!.playerData.order,
+                            }
+                        )
+                    }
+                />    
+            </td>
+        })
+    }
+
+    const createBettingTable = () => {
+        return rangeOfBets.map((contract) => {
+            return <tr key={contract}>{createBettingRow(contract)}</tr>
+        })
+    }
 
     if (gameState?.playerData.order !== gameState?.currentActivePlayer) {
         return (
@@ -46,25 +67,9 @@ function BettingStage() {
                 )}
                 <p className="text-3xl">Choose a bet</p>
                 <div className="flex gap-2">
-                    {[0, 1, 2, 3, 4]
-                        .filter(
-                            (suit) =>
-                                suit !== currentBet.suit ||
-                                currentBet.contract === 0,
-                        )
-                        .map((suit) => (
-                            <Button
-                                text={cardSuitToHumanStr[suit]}
-                                textSize="text-xl"
-                                key={suit}
-                                onClick={() =>
-                                    socket?.emitWithAck(
-                                        "submitBet",
-                                        getBet(suit),
-                                    )
-                                }
-                            />
-                        ))}
+                    <table>
+                        <tbody>{createBettingTable()}</tbody>
+                    </table>
                     {gameState?.currentBet.contract !== 0 && (
                         <Button
                             text="Pass"

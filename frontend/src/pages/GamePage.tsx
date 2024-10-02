@@ -1,11 +1,12 @@
 import SetTitle from "@/components/SetTitle"
 import { useNavigate, useParams } from "react-router-dom"
 import { useCallback, useContext, useEffect } from "react"
-import { SocketContext } from "@/base/BasePage"
+import { GlobalContext, SocketContext } from "@/base/BasePage"
 import {
+    cardSuitToSymbol,
     cardToCardURL,
     countCardsOfSuit,
-    redBlackSuitOrdering,
+    cardSort,
 } from "@/util/cards"
 import BettingStage from "@/components/BettingStage"
 import WashStage from "@/components/WashStage"
@@ -14,11 +15,14 @@ import PlayingStage from "@/components/PlayingStage"
 import { Card } from "@backend/types/Card"
 import RoundEndStage from "@/components/RoundEndStage"
 import GameEndStage from "@/components/GameEndStage"
+import { CensoredGameState } from "@backend/types/CensoredGameState"
 
 function GamePage() {
     const navigate = useNavigate()
 
     const { gameState, socket } = useContext(SocketContext)
+    const { globalContext } = useContext(GlobalContext)
+
     const { roomCode: roomCodeParam } = useParams()
 
     useEffect(() => {
@@ -79,6 +83,49 @@ function GamePage() {
         [gameState, socket],
     )
 
+    // honestly this is real clunky method to generate the betting history table
+    const showBettingHistory = (gameState: CensoredGameState, idx: number) => {
+        if(gameState!.betHistory.length == 0 || gameState.gameState < 2) return <></>
+
+        const history = [...gameState.betHistory]
+        const lastPlayer = gameState.gameState === 2 ? gameState.currentActivePlayer : gameState.currentBet.order
+
+        // count number of betting rounds
+        let rounds = 1
+        if (history.length > 1) {
+            history.forEach((current, index)=>{
+                const next = history[index + 1]
+                if (next && (next.order < current.order)) rounds++
+            })
+            // this is for when there are no bids in the latest round yet
+            if (lastPlayer < history[history.length-1].order) rounds++
+            // this is because when we are no longer in bidding phase, lastPlayer == last bid's order
+            else if (gameState.gameState != 2 && (lastPlayer + 3) % 4 < history[history.length-1].order) rounds ++
+        }
+        
+        const newHistory = []
+        let round = 1
+        let playerId = 0
+        while(round != rounds || playerId != lastPlayer) {
+            if(history.length != 0 && history[0].order == playerId)
+                newHistory.push(history.shift())
+            else newHistory.push(null)
+            if(playerId == 3) round++;
+            playerId = (playerId + 1) % 4
+        }
+        
+        const everyFourth = [];
+        for (let i = idx; i < newHistory.length; i += 4) {
+            everyFourth.push(newHistory[i]);
+        }
+        
+        // console.log(JSON.stringify(gameState.betHistory)+'\n'+JSON.stringify(newHistory)+'\n'+JSON.stringify(everyFourth))
+        return everyFourth.map((bet, index)=>{
+            if(!bet) return <td key={index}>-</td>
+            else return <td key={index}>{`${bet.contract}${cardSuitToSymbol[bet.suit]}`}</td>
+        })
+    }
+
     if (!gameState) return <></>
 
     return (
@@ -94,20 +141,22 @@ function GamePage() {
 
             <div className="flex flex-col gap-2 justify-center items-center border-b-2 p-2 w-full grow">
                 <p className="text-2xl underline">Players</p>
-                {gameState.playerData.playerNames.map((player, idx) => (
-                    <p key={player} className="text-xl">
-                        {idx + 1}.{" "}
-                        <span
-                            className={isActive(idx) ? "text-orange-400" : ""}
-                        >
+                <table><tbody>
+                {gameState.playerData.playerNames.map((player, idx: number) => (
+                    <tr key={player} className="text-xl">
+                        <td>{gameState.playerData.order === idx ? '⮕' : ''}</td>
+                        <td className={isActive(idx) && gameState.gameState !== 1 ? "text-orange-400" : "" + " pr-4"}>
                             {player}
-                        </span>
-                        {gameState.playerData.order === idx ? " (You)" : ""}
-                        {gameState.gameState === 4 || gameState.gameState === 5
-                            ? ` [${gameState.tricksWon[idx].length}]`
+                        </td>
+                        <td className="px-4">
+                            {gameState.gameState === 4 || gameState.gameState === 5
+                            ? `${gameState.tricksWon[idx].length}`
                             : ""}
-                    </p>
+                        </td>
+                        {showBettingHistory(gameState, idx)}
+                    </tr>
                 ))}
+                </tbody></table>
                 <div className="grow" />
                 <div className="flex flex-col gap-4 items-center justify-center">
                     {getCentreDisplay()}
@@ -122,19 +171,12 @@ function GamePage() {
                             card: card,
                             valid: gameState.playerData.cardValid[idx],
                         }))
-                        .sort((a, b) =>
-                            redBlackSuitOrdering[a.card.suit] -
-                                redBlackSuitOrdering[b.card.suit] ===
-                            0
-                                ? a.card.value - b.card.value
-                                : redBlackSuitOrdering[a.card.suit] -
-                                  redBlackSuitOrdering[b.card.suit],
-                        )
+                        .sort((a, b) => cardSort(a, b, globalContext.balatro))
                         .map((card) => (
                             <img
-                                key={cardToCardURL(card.card)}
-                                src={cardToCardURL(card.card)}
-                                className={`w-[6%] ${
+                                key={cardToCardURL(card.card, globalContext.balatro)}
+                                src={cardToCardURL(card.card, globalContext.balatro)}
+                                className={`w-[6%] rounded-sm ${
                                     gameState.gameState === 4 &&
                                     gameState.currentActivePlayer ===
                                         gameState.playerData.order &&
@@ -142,6 +184,7 @@ function GamePage() {
                                         ? "hover:-translate-y-5"
                                         : ""
                                 } transition-transform duration-100 ${gameState.gameState === 4 && !card.valid ? 'opacity-50' : ''}`}
+                                style={{imageRendering: "pixelated"}}
                                 onClick={() => {
                                     if (card.valid) playCard(card.card)
                                 }}
