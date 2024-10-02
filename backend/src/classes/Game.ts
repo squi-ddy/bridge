@@ -12,6 +12,7 @@ export class Game {
     playerOrder: string[]
     gameState: number // 0 = waiting, 1 = wait for wash, 2 = betting, 3 = choose partner, 4 = playing, 5 = round end, 6 = winner!
     currentBet: Bet
+    betHistory: Bet[]
     currentActivePlayer: number
     roundStartPlayer: number
     tricksWon: Card[][][]
@@ -32,6 +33,7 @@ export class Game {
             suit: 4,
             order: -1,
         }
+        this.betHistory = []
         this.currentActivePlayer = -1
         this.roundStartPlayer = -1
         this.tricksWon = [[], [], [], []]
@@ -230,6 +232,7 @@ export class Game {
         }
 
         this.currentBet = bet
+        this.betHistory.push(bet)
         for (const player of this.players.values()) {
             player.socket?.emit("syncState", this.getFullState(player.id))
         }
@@ -460,6 +463,7 @@ export class Game {
         return {
             gameState: this.gameState,
             currentBet: this.currentBet,
+            betHistory: this.betHistory,
             currentActivePlayer: this.currentActivePlayer,
             roundStartPlayer: this.roundStartPlayer,
             tricksWon: this.tricksWon,
