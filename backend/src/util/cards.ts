@@ -44,6 +44,11 @@ export function calculateWash(hand: Card[]): number {
 export function isCardValid(cards: Card[], idx: number, trumpBroken: boolean, trumpSuit: number, firstPlayedCard: Card | null): boolean {
     const card = cards[idx]
 
+    if (!trumpBroken && !cards.some((c) => c.suit === trumpSuit)) {
+        // corner case
+        return true
+    }
+
     if (card.suit === trumpSuit && !trumpBroken && firstPlayedCard === null) {
         // trump card but trump not broken
         return false
