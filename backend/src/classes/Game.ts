@@ -389,9 +389,9 @@ export class Game {
             }
         }
 
-        if (team1Tricks === 6 + this.currentBet.contract) {
+        if (team1Tricks >= 6 + this.currentBet.contract) {
             this.winningTeam = 1
-        } else if (team2Tricks === 8 - this.currentBet.contract) {
+        } else if (team2Tricks >= 8 - this.currentBet.contract) {
             // 13 - (6 + this.currentBet.contract) + 1 = 8 - this.currentBet.contract
             this.winningTeam = 2
         }
