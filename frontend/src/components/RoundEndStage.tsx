@@ -1,7 +1,7 @@
 import { SocketContext } from "@/base/BasePage"
-import { useContext, useEffect, useState, useCallback } from "react"
+import { useContext, useEffect, useState, useRef } from "react"
 import PlayingStageCards from "./PlayingStageCards"
-import { cardSuitToHumanStr, cardValueToHumanStr } from "@/util/cards"
+import { cardSuitToSymbol, cardValueToHumanStr } from "@/util/cards"
 import { Card } from "@backend/types/Card"
 import Button from "./Button"
 
@@ -9,6 +9,8 @@ function RoundEndStage() {
     const { gameState, socket } = useContext(SocketContext)
 
     const [submittedMoveOn, setSubmittedMoveOn] = useState(false)
+    const [timeLeft, setTimeLeft] = useState(10)
+    const timer = useRef<NodeJS.Timeout | null>(null)
 
     const currentBet = gameState!.currentBet
 
@@ -21,36 +23,46 @@ function RoundEndStage() {
         (idx) => gameState!.playerData.playerNames[(startingPlayer + idx) % 4],
     )
 
-    const confirmation = useCallback(() => {
-        socket?.emitWithAck("submitMoveOn")
-        setSubmittedMoveOn(true)
-    }, [socket])
-
     useEffect(() => {
-        const timer = setTimeout(confirmation, 5000) 
+        timer.current = setInterval(() => {
+            setTimeLeft((timeLeft) => timeLeft - 1)
+        }, 1000)
         // Cleanup the timer when the component unmounts
-        return () => clearTimeout(timer)
+        return () => clearInterval(timer.current!)
     }, [])
+
+    if (timeLeft === 0) {
+        socket?.emitWithAck("submitMoveOn")
+        clearInterval(timer.current!)
+        timer.current = null
+    }
 
     return (
         <>
             <p className="text-2xl">{`Bet: ${currentBet.contract} ${
-                cardSuitToHumanStr[currentBet.suit]
+                cardSuitToSymbol[currentBet.suit]
             } by ${gameState?.playerData.playerNames[currentBet.order]}`}</p>
             <p className="text-2xl">{`Partner is the ${
                 cardValueToHumanStr[gameState!.partnerCard!.value - 2]
-            } of ${cardSuitToHumanStr[gameState!.partnerCard!.suit]}`}</p>
+            } of ${cardSuitToSymbol[gameState!.partnerCard!.suit]}`}</p>
             <p className="text-3xl">{`${gameState?.playerData.playerNames[
                 gameState?.winningPlayer
             ]} won this trick!`}</p>
             <PlayingStageCards cards={cardsPlayed} playerNames={playerNames} />
             <Button
                 text="Next"
-                onClick={confirmation}
+                onClick={() => {
+                    socket?.emitWithAck("submitMoveOn")
+                    setSubmittedMoveOn(true)
+                }}
             />
-            {submittedMoveOn && (
+            {submittedMoveOn && timeLeft > 0 && (
                 <p className="text-2xl">Waiting for other players...</p>
             )}
+            {timeLeft <= 5 && timeLeft > 0 && (
+                <p className="text-2xl">Skipping in {timeLeft}s...</p>
+            )}
+            {timeLeft <= 0 && <p className="text-2xl">Skipping...</p>}
         </>
     )
 }

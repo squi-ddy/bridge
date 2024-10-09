@@ -6,7 +6,7 @@ export type CensoredData = {
     ready: boolean[]
     numCards: number[]
     hand: Card[]
+    handPoints: number
     cardValid: boolean[]
-    handPoints: number[]
     order: number
 }

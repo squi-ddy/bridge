@@ -1,6 +1,6 @@
 import { SocketContext } from "@/base/BasePage"
 import { useContext } from "react"
-import { cardSuitToHumanStr, cardValueToHumanStr } from "@/util/cards"
+import { cardSuitToSymbol, cardValueToHumanStr } from "@/util/cards"
 import PlayingStageCards from "./PlayingStageCards"
 import { Card } from "@backend/types/Card"
 
@@ -22,13 +22,13 @@ function PlayingStage() {
         return (
             <>
                 <p className="text-2xl">{`Bet: ${currentBet.contract} ${
-                    cardSuitToHumanStr[currentBet.suit]
+                    cardSuitToSymbol[currentBet.suit]
                 } by ${gameState?.playerData.playerNames[
                     currentBet.order
                 ]}`}</p>
                 <p className="text-2xl">{`Partner is the ${
                     cardValueToHumanStr[gameState!.partnerCard!.value - 2]
-                } of ${cardSuitToHumanStr[gameState!.partnerCard!.suit]}`}</p>
+                } of ${cardSuitToSymbol[gameState!.partnerCard!.suit]}`}</p>
                 <p className="text-3xl">{`Waiting for ${gameState?.playerData
                     .playerNames[
                     gameState?.currentActivePlayer
@@ -43,13 +43,13 @@ function PlayingStage() {
         return (
             <>
                 <p className="text-2xl">{`Bet: ${currentBet.contract} ${
-                    cardSuitToHumanStr[currentBet.suit]
+                    cardSuitToSymbol[currentBet.suit]
                 } by ${gameState?.playerData.playerNames[
                     currentBet.order
                 ]}`}</p>
                 <p className="text-2xl">{`Partner is the ${
                     cardValueToHumanStr[gameState!.partnerCard!.value - 2]
-                } of ${cardSuitToHumanStr[gameState!.partnerCard!.suit]}`}</p>
+                } of ${cardSuitToSymbol[gameState!.partnerCard!.suit]}`}</p>
                 <p className="text-3xl">{`Play a card...`}</p>
                 <PlayingStageCards
                     cards={cardsPlayed}
