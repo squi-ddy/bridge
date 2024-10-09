@@ -2,7 +2,6 @@ import {
     createContext,
     Dispatch,
     SetStateAction,
-    useCallback,
     useEffect,
     useMemo,
     useState,
@@ -21,6 +20,20 @@ export const SocketContext = createContext<{
     socket?: Socket<ServerToClientEvents, ClientToServerEvents>
     firstRender: boolean
 }>({ gameState: undefined, firstRender: true })
+
+export type SettingsType = {
+    balatro: boolean
+}
+
+export type SettingsContextType = {
+    settings: SettingsType
+    setSettings: (globalContext: SettingsType) => void
+}
+
+export const SettingsContext = createContext<SettingsContextType>({
+    settings: { balatro: false },
+    setSettings: () => {},
+})
 
 function BasePage(props: { children?: React.ReactNode }) {
     const [currentGameState, setCurrentGameState] =
@@ -53,36 +66,36 @@ function BasePage(props: { children?: React.ReactNode }) {
         }
     }, [])
 
-    const resyncGame = useCallback(async () => {
-        const pid = localStorage.getItem("pid")
-        if (pid === null) {
-            setCurrentGameState(null)
-            return
-        }
+    // const resyncGame = useCallback(async () => {
+    //     const pid = localStorage.getItem("pid")
+    //     if (pid === null) {
+    //         setCurrentGameState(null)
+    //         return
+    //     }
 
-        socket?.emit("reconnect", pid, (data) => {
-            if (!data.status || data.data === 0) {
-                // failed to resync
-                console.log("Failed to reconnect")
-                setCurrentGameState(null)
-                localStorage.removeItem("pid")
-            } else if (data.data === 1) {
-                // already connected
-                alert("You're already connected!")
-                socket.disconnect()
-                window.close()
-            } else {
-                // success
-                console.log("Reconnected")
-            }
-        })
-    }, [socket])
+    //     socket?.emit("reconnect", pid, (data) => {
+    //         if (!data.status || data.data === 0) {
+    //             // failed to resync
+    //             console.log("Failed to reconnect")
+    //             setCurrentGameState(null)
+    //             localStorage.removeItem("pid")
+    //         } else if (data.data === 1) {
+    //             // already connected
+    //             alert("You're already connected!")
+    //             socket.disconnect()
+    //             window.close()
+    //         } else {
+    //             // success
+    //             console.log("Reconnected")
+    //         }
+    //     })
+    // }, [socket])
 
-    useEffect(() => {
-        resyncGame()
-    }, [resyncGame])
+    // useEffect(() => {
+    //     resyncGame()
+    // }, [resyncGame])
 
-    const contextValue = useMemo(() => {
+    const socketContextValue = useMemo(() => {
         return {
             gameState: currentGameState,
             setGameState: setCurrentGameState,
@@ -91,23 +104,40 @@ function BasePage(props: { children?: React.ReactNode }) {
         }
     }, [currentGameState, socket, firstRender])
 
+    const [settings, setSettings] = useState({ balatro: false })
+
     if (currentGameState === undefined) {
         return <></>
     }
 
     return (
         <div id="root">
-            <SocketContext.Provider value={contextValue}>
-                <div className="bg-gradient-to-r from-sky-900 to-sky-800 w-full">
-                    <div className="px-5 flex items-center justify-center p-2 gap-2">
-                        <p className="text-5xl justify-self-start my-1 font-bold text-orange-400 drop-shadow-md">
-                            Bridge
-                        </p>
+            <SettingsContext.Provider value={{ settings, setSettings }}>
+                <SocketContext.Provider value={socketContextValue}>
+                    <div className="bg-gradient-to-r from-sky-900 to-sky-800 w-full">
+                        <div className="px-5 flex items-center justify-center p-2 gap-2">
+                            <p className="text-5xl justify-self-start my-1 font-bold text-orange-400 drop-shadow-md">
+                                <span
+                                    className="cursor-pointer"
+                                    onClick={() =>
+                                        setSettings((prev) => {
+                                            return {
+                                                ...prev,
+                                                balatro: !prev.balatro,
+                                            }
+                                        })
+                                    }
+                                >
+                                    B
+                                </span>
+                                ridge
+                            </p>
+                        </div>
                     </div>
-                </div>
 
-                {props.children}
-            </SocketContext.Provider>
+                    {props.children}
+                </SocketContext.Provider>
+            </SettingsContext.Provider>
         </div>
     )
 }

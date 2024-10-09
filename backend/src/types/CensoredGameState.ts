@@ -5,6 +5,7 @@ import { CensoredData } from "./CensoredData"
 export type CensoredGameState = {
     gameState: number
     currentBet: Bet
+    betHistory: (Bet | null)[]
     currentActivePlayer: number
     roundStartPlayer: number
     tricksWon: Card[][][]

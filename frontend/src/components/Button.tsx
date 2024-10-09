@@ -14,8 +14,8 @@ const Button = forwardRef(function Button(
     const className = `${textSize} ${
         emphasis
             ? "text-sky-600 bg-sky-50 font-semibold"
-            : "hover:bg-sky-50 hover:text-sky-600 transition-colors duration-300"
-    } py-1 px-3 rounded-md border border-sky-100 ${props.z || ""}`
+            : "hover:bg-sky-50 hover:text-sky-600 transition-colors duration-300 border-sky-100"
+    } py-1 px-3 rounded-md border ${props.z || ""}`
     const tmpProps: {
         text: undefined
         textSize: undefined
