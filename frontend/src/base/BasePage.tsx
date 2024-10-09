@@ -66,34 +66,34 @@ function BasePage(props: { children?: React.ReactNode }) {
         }
     }, [])
 
-    // const resyncGame = useCallback(async () => {
-    //     const pid = localStorage.getItem("pid")
-    //     if (pid === null) {
-    //         setCurrentGameState(null)
-    //         return
-    //     }
+    const resyncGame = useCallback(async () => {
+        const pid = localStorage.getItem("pid")
+        if (pid === null) {
+            setCurrentGameState(null)
+            return
+        }
 
-    //     socket?.emit("reconnect", pid, (data) => {
-    //         if (!data.status || data.data === 0) {
-    //             // failed to resync
-    //             console.log("Failed to reconnect")
-    //             setCurrentGameState(null)
-    //             localStorage.removeItem("pid")
-    //         } else if (data.data === 1) {
-    //             // already connected
-    //             alert("You're already connected!")
-    //             socket.disconnect()
-    //             window.close()
-    //         } else {
-    //             // success
-    //             console.log("Reconnected")
-    //         }
-    //     })
-    // }, [socket])
+        socket?.emit("reconnect", pid, (data) => {
+            if (!data.status || data.data === 0) {
+                // failed to resync
+                console.log("Failed to reconnect")
+                setCurrentGameState(null)
+                localStorage.removeItem("pid")
+            } else if (data.data === 1) {
+                // already connected
+                alert("You're already connected!")
+                socket.disconnect()
+                window.close()
+            } else {
+                // success
+                console.log("Reconnected")
+            }
+        })
+    }, [socket])
 
-    // useEffect(() => {
-    //     resyncGame()
-    // }, [resyncGame])
+    useEffect(() => {
+        resyncGame()
+    }, [resyncGame])
 
     const socketContextValue = useMemo(() => {
         return {
