@@ -30,3 +30,5 @@ coverage
 
 db-data
 secrets.json
+
+balatro/output

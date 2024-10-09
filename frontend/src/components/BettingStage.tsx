@@ -1,45 +1,18 @@
 import { SocketContext } from "@/base/BasePage"
-import { useCallback, useContext } from "react"
+import { useContext } from "react"
 import Button from "./Button"
-import { cardSuitToHumanStr, cardSuitToSymbol } from "@/util/cards"
+import { cardSuitToSymbol } from "@/util/cards"
 
 function BettingStage() {
     const { gameState, socket } = useContext(SocketContext)
 
     const currentBet = gameState!.currentBet
+    const minContract = Math.max(1, currentBet.contract)
 
-    const rangeOfBets : number[] = []
-    for (let i = Math.max(1, currentBet.contract); i<=7;i++){
-        rangeOfBets.push(i)
-    }
-
-    const createBettingRow = (contract: number) => {
-        return [0, 1, 2, 3, 4].map((suit) => {
-            return <td key={suit}>
-                <Button
-                    text={`${contract}${cardSuitToSymbol[suit]}`}
-                    textSize="text-xl"
-                    disabled={contract == gameState!.currentBet.contract && suit <= gameState!.currentBet.suit}
-                    onClick={() =>
-                        socket?.emitWithAck(
-                            "submitBet",
-                            {
-                                contract: contract,
-                                suit: suit,
-                                order: gameState!.playerData.order,
-                            }
-                        )
-                    }
-                />    
-            </td>
-        })
-    }
-
-    const createBettingTable = () => {
-        return rangeOfBets.map((contract) => {
-            return <tr key={contract}>{createBettingRow(contract)}</tr>
-        })
-    }
+    const contractRange: number[] = Array.from(
+        { length: 8 - minContract },
+        (_, i) => minContract + i,
+    )
 
     if (gameState?.playerData.order !== gameState?.currentActivePlayer) {
         return (
@@ -47,7 +20,7 @@ function BettingStage() {
                 {currentBet.contract > 0 && (
                     <p className="text-2xl">{`Current bet: ${
                         currentBet.contract
-                    } ${cardSuitToHumanStr[currentBet.suit]} by ${gameState
+                    } ${cardSuitToSymbol[currentBet.suit]} by ${gameState
                         ?.playerData.playerNames[currentBet.order]}`}</p>
                 )}
                 <p className="text-3xl">{`Waiting for ${gameState?.playerData
@@ -62,15 +35,36 @@ function BettingStage() {
                 {currentBet.contract > 0 && (
                     <p className="text-2xl">{`Current bet: ${
                         currentBet.contract
-                    } ${cardSuitToHumanStr[currentBet.suit]} by ${gameState
+                    } ${cardSuitToSymbol[currentBet.suit]} by ${gameState
                         ?.playerData.playerNames[currentBet.order]}`}</p>
                 )}
                 <p className="text-3xl">Choose a bet</p>
-                <div className="flex gap-2">
-                    <table>
-                        <tbody>{createBettingTable()}</tbody>
-                    </table>
-                    {gameState?.currentBet.contract !== 0 && (
+                <div className="flex flex-col gap-2">
+                    <div className="grid grid-cols-5 gap-2">
+                        {contractRange.map((contract) =>
+                            [0, 1, 2, 3, 4].map((suit) =>
+                                contract == gameState!.currentBet.contract &&
+                                suit <= gameState!.currentBet.suit ? (
+                                    <div key={`${contract}${suit}`} />
+                                ) : (
+                                    <Button
+                                        text={`${contract} ${cardSuitToSymbol[suit]}`}
+                                        key={`${contract}${suit}`}
+                                        textSize="text-xl"
+                                        onClick={() =>
+                                            socket?.emitWithAck("submitBet", {
+                                                contract: contract,
+                                                suit: suit,
+                                                order: gameState!.playerData
+                                                    .order,
+                                            })
+                                        }
+                                    />
+                                ),
+                            ),
+                        )}
+                    </div>
+                    {gameState!.betHistory.length > 0 && (
                         <Button
                             text="Pass"
                             textSize="text-xl"

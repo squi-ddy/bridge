@@ -1,7 +1,11 @@
 import { SocketContext } from "@/base/BasePage"
 import { useCallback, useContext, useRef } from "react"
 import Button from "./Button"
-import { cardSuitToHumanStr, cardValueToHumanStr } from "@/util/cards"
+import {
+    cardSuitToHumanStr,
+    cardSuitToSymbol,
+    cardValueToHumanStr,
+} from "@/util/cards"
 import FormSelectionInput from "./forms/FormSelectionInput"
 import {
     InputErrorFunction,
@@ -58,7 +62,7 @@ function ChoosePartnerStage() {
         return (
             <>
                 <p className="text-2xl">{`Winning bet: ${currentBet.contract} ${
-                    cardSuitToHumanStr[currentBet.suit]
+                    cardSuitToSymbol[currentBet.suit]
                 } by ${gameState?.playerData.playerNames[
                     currentBet.order
                 ]}`}</p>
@@ -74,7 +78,7 @@ function ChoosePartnerStage() {
                 {currentBet.contract > 0 && (
                     <p className="text-2xl">{`Winning bet: ${
                         currentBet.contract
-                    } ${cardSuitToHumanStr[currentBet.suit]} by ${gameState
+                    } ${cardSuitToSymbol[currentBet.suit]} by ${gameState
                         ?.playerData.playerNames[currentBet.order]}`}</p>
                 )}
                 <p className="text-3xl">Choose a partner card:</p>

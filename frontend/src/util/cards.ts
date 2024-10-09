@@ -26,15 +26,19 @@ export const cardSuitToHumanStr = [
     "Spades",
     "No Trump",
 ]
-export const cardSuitToSymbol = ["♣️","♦️","♥️","♠️","NT"]
+export const cardSuitToSymbol = ["♣️", "♦️", "♥️", "♠️", "NT"]
 
 const redBlackSuitOrdering = [1, 0, 2, 3]
 
-export const cardSort = (a: {card: Card, valid: boolean}, b: {card: Card, valid: boolean}, balatro: boolean) => {
+export const cardSort = (
+    a: { card: Card; valid: boolean },
+    b: { card: Card; valid: boolean },
+    balatro: boolean,
+) => {
     const ordering = balatro ? [0, 1, 2, 3] : redBlackSuitOrdering
-    return ordering[a.card.suit] - ordering[b.card.suit] === 0 
-    ? a.card.value - b.card.value
-    : ordering[a.card.suit] - ordering[b.card.suit]
+    return ordering[a.card.suit] - ordering[b.card.suit] === 0
+        ? a.card.value - b.card.value
+        : ordering[a.card.suit] - ordering[b.card.suit]
 }
 
 export const cardValueToHumanStr = [
@@ -53,9 +57,14 @@ export const cardValueToHumanStr = [
     "Ace",
 ]
 
-export function cardToCardURL(card: Card, balatro: boolean = false): string {
-    if(balatro) return `${import.meta.env.BASE_URL}/cards/balatro/${cardSuitToStr[card.suit]}-${cardValueToStr[card.value]}.png`
-    return `${import.meta.env.BASE_URL}/cards/${cardSuitToStr[card.suit]}-${cardValueToStr[card.value]}.svg`
+export function cardToCardURL(card: Card, balatro: boolean): string {
+    if (balatro)
+        return `${import.meta.env.BASE_URL}cards/balatro/${
+            cardSuitToStr[card.suit]
+        }-${cardValueToStr[card.value]}.png`
+    return `${import.meta.env.BASE_URL}cards/${cardSuitToStr[card.suit]}-${
+        cardValueToStr[card.value]
+    }.svg`
     // if(balatro) return `http://localhost:3000/cards/balatro/${cardSuitToStr[card.suit]}-${cardValueToStr[card.value]}.png`
     // return `http://localhost:3000/cards/${cardSuitToStr[card.suit]}-${cardValueToStr[card.value]}.svg`
 }

@@ -12,7 +12,7 @@ export class Game {
     playerOrder: string[]
     gameState: number // 0 = waiting, 1 = wait for wash, 2 = betting, 3 = choose partner, 4 = playing, 5 = round end, 6 = winner!
     currentBet: Bet
-    betHistory: Bet[]
+    betHistory: (Bet | null)[]
     currentActivePlayer: number
     roundStartPlayer: number
     tricksWon: Card[][][]
@@ -213,6 +213,21 @@ export class Game {
             return false
         }
 
+        if (
+            bet && (
+                bet.contract < this.currentBet.contract || (bet.contract === this.currentBet.contract &&
+                bet.suit <= this.currentBet.suit)
+            )
+        ) {
+            return false
+        }
+
+        if (!bet && this.betHistory.length === 0) {
+            return false
+        }
+
+        this.betHistory.push(bet)
+
         this.currentActivePlayer = (this.currentActivePlayer + 1) % 4
         if (!bet) {
             if (this.currentActivePlayer === this.currentBet.order) {
@@ -224,16 +239,8 @@ export class Game {
             }
             return true
         }
-
-        if (
-            bet.contract < this.currentBet.contract || (bet.contract === this.currentBet.contract &&
-            bet.suit <= this.currentBet.suit)
-        ) {
-            return false
-        }
-
+        
         this.currentBet = bet
-        this.betHistory.push(bet)
         for (const player of this.players.values()) {
             player.socket?.emit("syncState", this.getFullState(player.id))
         }

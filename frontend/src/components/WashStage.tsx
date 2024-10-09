@@ -5,8 +5,7 @@ import Button from "./Button"
 function WashStage() {
     const { gameState, socket } = useContext(SocketContext)
 
-    const handPoints =
-        gameState!.playerData.handPoints[gameState!.playerData.order]
+    const handPoints = gameState!.playerData.handPoints
 
     if (handPoints <= 4) {
         return (

@@ -1,7 +1,7 @@
 import SetTitle from "@/components/SetTitle"
 import { useNavigate, useParams } from "react-router-dom"
 import { useCallback, useContext, useEffect } from "react"
-import { GlobalContext, SocketContext } from "@/base/BasePage"
+import { SettingsContext, SocketContext } from "@/base/BasePage"
 import {
     cardSuitToSymbol,
     cardToCardURL,
@@ -15,13 +15,52 @@ import PlayingStage from "@/components/PlayingStage"
 import { Card } from "@backend/types/Card"
 import RoundEndStage from "@/components/RoundEndStage"
 import GameEndStage from "@/components/GameEndStage"
-import { CensoredGameState } from "@backend/types/CensoredGameState"
+import CardImage from "@/components/CardImage"
+import { Bet } from "@backend/types/Bet"
+import Centred from "@/components/Centred"
+
+type BetHistoryData =
+    | {
+          pass: false
+          fill: false
+          bet: Bet
+          winning: boolean
+      }
+    | {
+          pass: true
+          fill: false
+      }
+    | {
+          fill: true
+          fillString: string
+          pass: false
+      }
+
+const showBettingHistory = (history: BetHistoryData[], idx: number) => {
+    return history
+        .filter((_, i) => i % 4 === idx)
+        .map((bet, index) => {
+            if (bet.pass) return <Centred key={index}>P</Centred>
+            if (bet.fill) return <Centred key={index}>{bet.fillString}</Centred>
+            else
+                return (
+                    <Centred
+                        key={index}
+                        className={`${
+                            bet.winning ? "border rounded-md px-2 py-1" : ""
+                        }`}
+                    >{`${bet.bet.contract} ${
+                        cardSuitToSymbol[bet.bet.suit]
+                    }`}</Centred>
+                )
+        })
+}
 
 function GamePage() {
     const navigate = useNavigate()
 
     const { gameState, socket } = useContext(SocketContext)
-    const { globalContext } = useContext(GlobalContext)
+    const { settings } = useContext(SettingsContext)
 
     const { roomCode: roomCodeParam } = useParams()
 
@@ -36,18 +75,17 @@ function GamePage() {
     const isActive = useCallback(
         (idx: number) => {
             if (gameState?.gameState === 1) {
-                if (gameState?.playerData.handPoints[idx] <= 4) {
-                    return true
-                } else {
-                    return false
-                }
+                return false
             } else if (
                 gameState?.gameState === 2 ||
                 gameState?.gameState === 3 ||
                 gameState?.gameState === 4
             ) {
                 return idx === gameState?.currentActivePlayer
-            } else if (gameState?.gameState === 5 || gameState?.gameState === 6) {
+            } else if (
+                gameState?.gameState === 5 ||
+                gameState?.gameState === 6
+            ) {
                 return !gameState?.okMoveOn[idx]
             }
         },
@@ -83,50 +121,34 @@ function GamePage() {
         [gameState, socket],
     )
 
-    // honestly this is real clunky method to generate the betting history table
-    const showBettingHistory = (gameState: CensoredGameState, idx: number) => {
-        if(gameState!.betHistory.length == 0 || gameState.gameState < 2) return <></>
-
-        const history = [...gameState.betHistory]
-        const lastPlayer = gameState.gameState === 2 ? gameState.currentActivePlayer : gameState.currentBet.order
-
-        // count number of betting rounds
-        let rounds = 1
-        if (history.length > 1) {
-            history.forEach((current, index)=>{
-                const next = history[index + 1]
-                if (next && (next.order < current.order)) rounds++
-            })
-            // this is for when there are no bids in the latest round yet
-            if (lastPlayer < history[history.length-1].order) rounds++
-            // this is because when we are no longer in bidding phase, lastPlayer == last bid's order
-            else if (gameState.gameState != 2 && (lastPlayer + 3) % 4 < history[history.length-1].order) rounds ++
-        }
-        
-        const newHistory = []
-        let round = 1
-        let playerId = 0
-        while(round != rounds || playerId != lastPlayer) {
-            if(history.length != 0 && history[0].order == playerId)
-                newHistory.push(history.shift())
-            else newHistory.push(null)
-            if(playerId == 3) round++;
-            playerId = (playerId + 1) % 4
-        }
-        
-        const everyFourth = [];
-        for (let i = idx; i < newHistory.length; i += 4) {
-            everyFourth.push(newHistory[i]);
-        }
-        
-        // console.log(JSON.stringify(gameState.betHistory)+'\n'+JSON.stringify(newHistory)+'\n'+JSON.stringify(everyFourth))
-        return everyFourth.map((bet, index)=>{
-            if(!bet) return <td key={index}>-</td>
-            else return <td key={index}>{`${bet.contract}${cardSuitToSymbol[bet.suit]}`}</td>
-        })
-    }
-
     if (!gameState) return <></>
+
+    let history: BetHistoryData[] = [
+        ...gameState.betHistory.map<BetHistoryData>((bet) =>
+            bet
+                ? { pass: false, fill: false, bet, winning: false }
+                : { pass: true, fill: false },
+        ),
+    ]
+    if (gameState.gameState > 2) {
+        // add winning bet
+        const winningBet = gameState.currentBet
+        history = [
+            ...history,
+            { pass: false, fill: false, bet: winningBet, winning: true },
+        ]
+    }
+    const numBetCols = Math.ceil(history.length / 4)
+    history = [
+        ...history,
+        ...Array.from<unknown, BetHistoryData>(
+            { length: numBetCols * 4 - history.length },
+            () =>
+                gameState.gameState > 2
+                    ? { fill: true, pass: false, fillString: "-" }
+                    : { fill: true, fillString: "", pass: false },
+        ),
+    ]
 
     return (
         <>
@@ -140,23 +162,51 @@ function GamePage() {
             </div>
 
             <div className="flex flex-col gap-2 justify-center items-center border-b-2 p-2 w-full grow">
-                <p className="text-2xl underline">Players</p>
-                <table><tbody>
-                {gameState.playerData.playerNames.map((player, idx: number) => (
-                    <tr key={player} className="text-xl">
-                        <td>{gameState.playerData.order === idx ? '⮕' : ''}</td>
-                        <td className={isActive(idx) && gameState.gameState !== 1 ? "text-orange-400" : "" + " pr-4"}>
-                            {player}
-                        </td>
-                        <td className="px-4">
-                            {gameState.gameState === 4 || gameState.gameState === 5
-                            ? `${gameState.tricksWon[idx].length}`
+                <div
+                    className="grid gap-2 text-xl"
+                    style={{
+                        gridTemplateColumns: `repeat(${numBetCols + 3}, auto)`,
+                    }}
+                >
+                    <div />
+                    <div />
+                    <Centred>
+                        {gameState.gameState === 4 || gameState.gameState === 5
+                            ? "Pts"
                             : ""}
-                        </td>
-                        {showBettingHistory(gameState, idx)}
-                    </tr>
-                ))}
-                </tbody></table>
+                    </Centred>
+                    {Array.from({ length: numBetCols }, (_, idx) => (
+                        <Centred key={idx}>Bet {idx + 1}</Centred>
+                    ))}
+                    {gameState.playerData.playerNames.map(
+                        (player, idx: number) => (
+                            <>
+                                <Centred>
+                                    {gameState.playerData.order === idx
+                                        ? "⮕"
+                                        : ""}
+                                </Centred>
+                                <Centred
+                                    className={`${
+                                        isActive(idx) &&
+                                        gameState.gameState !== 1
+                                            ? "text-orange-400"
+                                            : ""
+                                    }`}
+                                >
+                                    {player}
+                                </Centred>
+                                <Centred>
+                                    {gameState.gameState === 4 ||
+                                    gameState.gameState === 5
+                                        ? `${gameState.tricksWon[idx].length}`
+                                        : ""}
+                                </Centred>
+                                {showBettingHistory(history, idx)}
+                            </>
+                        ),
+                    )}
+                </div>
                 <div className="grow" />
                 <div className="flex flex-col gap-4 items-center justify-center">
                     {getCentreDisplay()}
@@ -165,26 +215,30 @@ function GamePage() {
                 <p className="text-2xl">
                     {countCardsOfSuit(gameState.playerData.hand!)}
                 </p>
-                <div className="flex flex-row w-full gap-2 mb-5 justify-center">
+                <div className="flex flex-row w-full gap-x-4 gap-y-1 mb-4 justify-center">
                     {gameState.playerData.hand
                         ?.map((card, idx) => ({
                             card: card,
                             valid: gameState.playerData.cardValid[idx],
                         }))
-                        .sort((a, b) => cardSort(a, b, globalContext.balatro))
+                        .sort((a, b) => cardSort(a, b, settings.balatro))
                         .map((card) => (
-                            <img
-                                key={cardToCardURL(card.card, globalContext.balatro)}
-                                src={cardToCardURL(card.card, globalContext.balatro)}
-                                className={`w-[6%] rounded-sm ${
+                            <CardImage
+                                key={cardToCardURL(card.card, settings.balatro)}
+                                card={card.card}
+                                balatro={settings.balatro}
+                                className={`w-[6%] ${
                                     gameState.gameState === 4 &&
                                     gameState.currentActivePlayer ===
                                         gameState.playerData.order &&
                                     card.valid
                                         ? "hover:-translate-y-5"
                                         : ""
-                                } transition-transform duration-100 ${gameState.gameState === 4 && !card.valid ? 'opacity-50' : ''}`}
-                                style={{imageRendering: "pixelated"}}
+                                } transition-transform duration-100 ${
+                                    gameState.gameState === 4 && !card.valid
+                                        ? "opacity-50"
+                                        : ""
+                                }`}
                                 onClick={() => {
                                     if (card.valid) playCard(card.card)
                                 }}

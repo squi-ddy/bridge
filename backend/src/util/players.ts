@@ -12,14 +12,15 @@ export function censorPlayerData(
     firstPlayedCard: Card | null
 ): CensoredData {
     const hand = players.get(pid)!.cards
+    const handPoints = players.get(pid)!.handPoints
 
     return {
         id: pid,
         playerNames: playerOrder.map((id) => players.get(id)!.name),
         numCards: playerOrder.map((id) => players.get(id)!.cards.length),
-        hand: hand,
+        hand,
         cardValid: hand.map((_, idx) => isCardValid(hand, idx, isTrumpBroken, trumpSuit, firstPlayedCard)),
-        handPoints: playerOrder.map(id => players.get(id)!.handPoints),
+        handPoints,
         order: playerOrder.findIndex((id) => id === pid),
         ready: playerOrder.map(id => players.get(id)!.okToStart),
     }
