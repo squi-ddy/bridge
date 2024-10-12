@@ -1,9 +1,10 @@
 import { Bet } from "./Bet"
 import { Card } from "./Card"
 import { CensoredData } from "./CensoredData"
+import { GameState } from "./GameState"
 
 export type CensoredGameState = {
-    gameState: number
+    gameState: GameState
     currentBet: Bet
     betHistory: (Bet | null)[]
     currentActivePlayer: number

@@ -18,6 +18,7 @@ import GameEndStage from "@/components/GameEndStage"
 import CardImage from "@/components/CardImage"
 import { Bet } from "@backend/types/Bet"
 import Centred from "@/components/Centred"
+import { GameState } from "@backend/types/GameState"
 
 type BetHistoryData =
     | {
@@ -56,6 +57,11 @@ const showBettingHistory = (history: BetHistoryData[], idx: number) => {
         })
 }
 
+type CardWithValid = {
+    card: Card
+    valid: boolean
+}
+
 function GamePage() {
     const navigate = useNavigate()
 
@@ -74,17 +80,17 @@ function GamePage() {
 
     const isActive = useCallback(
         (idx: number) => {
-            if (gameState?.gameState === 1) {
+            if (gameState?.gameState === GameState.WASH) {
                 return false
             } else if (
-                gameState?.gameState === 2 ||
-                gameState?.gameState === 3 ||
-                gameState?.gameState === 4
+                gameState?.gameState === GameState.BID ||
+                gameState?.gameState === GameState.PARTNER ||
+                gameState?.gameState === GameState.PLAYING
             ) {
                 return idx === gameState?.currentActivePlayer
             } else if (
-                gameState?.gameState === 5 ||
-                gameState?.gameState === 6
+                gameState?.gameState === GameState.ROUND_END ||
+                gameState?.gameState === GameState.GAME_END
             ) {
                 return !gameState?.okMoveOn[idx]
             }
@@ -92,18 +98,27 @@ function GamePage() {
         [gameState],
     )
 
+    const getCardImageClassName = useCallback(
+        (card: CardWithValid) => {
+            if (gameState?.gameState !== GameState.PLAYING) return ""
+            if (!isActive(gameState.playerData.order)) return ""
+            return card.valid ? "hover:-translate-y-5" : "opacity-50"
+        },
+        [isActive, gameState],
+    )
+
     const getCentreDisplay = useCallback(() => {
-        if (gameState?.gameState === 1) {
+        if (gameState?.gameState === GameState.WASH) {
             return <WashStage />
-        } else if (gameState?.gameState === 2) {
+        } else if (gameState?.gameState === GameState.BID) {
             return <BettingStage />
-        } else if (gameState?.gameState === 3) {
+        } else if (gameState?.gameState === GameState.PARTNER) {
             return <ChoosePartnerStage />
-        } else if (gameState?.gameState === 4) {
+        } else if (gameState?.gameState === GameState.PLAYING) {
             return <PlayingStage />
-        } else if (gameState?.gameState === 5) {
+        } else if (gameState?.gameState === GameState.ROUND_END) {
             return <RoundEndStage />
-        } else if (gameState?.gameState === 6) {
+        } else if (gameState?.gameState === GameState.GAME_END) {
             return <GameEndStage />
         }
     }, [gameState])
@@ -113,7 +128,7 @@ function GamePage() {
             if (
                 gameState?.currentActivePlayer ===
                     gameState?.playerData.order &&
-                gameState?.gameState === 4
+                gameState?.gameState === GameState.PLAYING
             ) {
                 socket?.emitWithAck("playCard", card)
             }
@@ -130,7 +145,10 @@ function GamePage() {
                 : { pass: true, fill: false },
         ),
     ]
-    if (gameState.gameState > 2) {
+    if (
+        gameState.gameState !== GameState.LOBBY &&
+        gameState.gameState !== GameState.WASH
+    ) {
         // add winning bet
         const winningBet = gameState.currentBet
         history = [
@@ -144,7 +162,8 @@ function GamePage() {
         ...Array.from<unknown, BetHistoryData>(
             { length: numBetCols * 4 - history.length },
             () =>
-                gameState.gameState > 2
+                gameState.gameState !== GameState.LOBBY &&
+                gameState.gameState !== GameState.WASH
                     ? { fill: true, pass: false, fillString: "-" }
                     : { fill: true, fillString: "", pass: false },
         ),
@@ -171,7 +190,9 @@ function GamePage() {
                     <div />
                     <div />
                     <Centred>
-                        {gameState.gameState === 4 || gameState.gameState === 5
+                        {gameState.gameState === GameState.PLAYING ||
+                        gameState.gameState === GameState.ROUND_END ||
+                        gameState.gameState === GameState.GAME_END
                             ? "Pts"
                             : ""}
                     </Centred>
@@ -188,17 +209,17 @@ function GamePage() {
                                 </Centred>
                                 <Centred
                                     className={`${
-                                        isActive(idx) &&
-                                        gameState.gameState !== 1
-                                            ? "text-orange-400"
-                                            : ""
+                                        isActive(idx) ? "text-orange-400" : ""
                                     }`}
                                 >
                                     {player}
                                 </Centred>
                                 <Centred>
-                                    {gameState.gameState === 4 ||
-                                    gameState.gameState === 5
+                                    {gameState.gameState ===
+                                        GameState.PLAYING ||
+                                    gameState.gameState ===
+                                        GameState.ROUND_END ||
+                                    gameState.gameState === GameState.GAME_END
                                         ? `${gameState.tricksWon[idx].length}`
                                         : ""}
                                 </Centred>
@@ -227,18 +248,9 @@ function GamePage() {
                                 key={cardToCardURL(card.card, settings.balatro)}
                                 card={card.card}
                                 balatro={settings.balatro}
-                                className={`w-[6%] ${
-                                    gameState.gameState === 4 &&
-                                    gameState.currentActivePlayer ===
-                                        gameState.playerData.order &&
-                                    card.valid
-                                        ? "hover:-translate-y-5"
-                                        : ""
-                                } transition-transform duration-100 ${
-                                    gameState.gameState === 4 && !card.valid
-                                        ? "opacity-50"
-                                        : ""
-                                }`}
+                                className={`w-[6%] transition-transform duration-100 ${getCardImageClassName(
+                                    card,
+                                )}`}
                                 onClick={() => {
                                     if (card.valid) playCard(card.card)
                                 }}

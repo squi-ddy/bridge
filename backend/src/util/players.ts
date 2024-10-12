@@ -9,7 +9,7 @@ export function censorPlayerData(
     pid: string,
     isTrumpBroken: boolean,
     trumpSuit: number,
-    firstPlayedCard: Card | null
+    firstPlayedCard: Card | null,
 ): CensoredData {
     const hand = players.get(pid)!.cards
     const handPoints = players.get(pid)!.handPoints
@@ -19,10 +19,12 @@ export function censorPlayerData(
         playerNames: playerOrder.map((id) => players.get(id)!.name),
         numCards: playerOrder.map((id) => players.get(id)!.cards.length),
         hand,
-        cardValid: hand.map((_, idx) => isCardValid(hand, idx, isTrumpBroken, trumpSuit, firstPlayedCard)),
+        cardValid: hand.map((_, idx) =>
+            isCardValid(hand, idx, isTrumpBroken, trumpSuit, firstPlayedCard),
+        ),
         handPoints,
         order: playerOrder.findIndex((id) => id === pid),
-        ready: playerOrder.map(id => players.get(id)!.okToStart),
+        ready: playerOrder.map((id) => players.get(id)!.okToStart),
     }
 }
 

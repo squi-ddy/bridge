@@ -3,6 +3,7 @@ import { useContext, useEffect } from "react"
 import LobbyPage from "./LobbyPage"
 import GamePage from "./GamePage"
 import { useNavigate, useParams } from "react-router-dom"
+import { GameState } from "@backend/types/GameState"
 
 function GamePageRouter() {
     const navigate = useNavigate()
@@ -17,7 +18,7 @@ function GamePageRouter() {
         }
     }, [gameState, navigate, roomCodeParam])
 
-    if (gameState?.gameState === 0) {
+    if (gameState?.gameState === GameState.LOBBY) {
         return <LobbyPage />
     } else {
         return <GamePage />

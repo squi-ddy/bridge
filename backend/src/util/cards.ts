@@ -41,7 +41,13 @@ export function calculateWash(hand: Card[]): number {
     return points
 }
 
-export function isCardValid(cards: Card[], idx: number, trumpBroken: boolean, trumpSuit: number, firstPlayedCard: Card | null): boolean {
+export function isCardValid(
+    cards: Card[],
+    idx: number,
+    trumpBroken: boolean,
+    trumpSuit: number,
+    firstPlayedCard: Card | null,
+): boolean {
     const card = cards[idx]
 
     if (!trumpBroken && cards.every((c) => c.suit === trumpSuit)) {
