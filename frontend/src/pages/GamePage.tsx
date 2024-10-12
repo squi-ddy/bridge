@@ -163,7 +163,7 @@ function GamePage() {
 
             <div className="flex flex-col gap-2 justify-center items-center border-b-2 p-2 w-full grow">
                 <div
-                    className="grid gap-2 text-xl"
+                    className="grid gap-x-4 gap-y-1 text-xl"
                     style={{
                         gridTemplateColumns: `repeat(${numBetCols + 3}, auto)`,
                     }}
@@ -215,7 +215,7 @@ function GamePage() {
                 <p className="text-2xl">
                     {countCardsOfSuit(gameState.playerData.hand!)}
                 </p>
-                <div className="flex flex-row w-full gap-x-4 gap-y-1 mb-4 justify-center">
+                <div className="flex flex-row w-full mb-4 justify-center">
                     {gameState.playerData.hand
                         ?.map((card, idx) => ({
                             card: card,
