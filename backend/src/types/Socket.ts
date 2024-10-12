@@ -3,12 +3,12 @@ import { Card } from "./Card"
 import { CensoredGameState } from "./CensoredGameState"
 import { SocketReturnData, SocketReturnStatus } from "./SocketReturn"
 
-export interface ServerToClientEvents {
+export type ServerToClientEvents = {
     syncState: (state: CensoredGameState) => void
     endGame: (winners: string[]) => void
 }
 
-export interface ClientToServerEvents {
+export type ClientToServerEvents = {
     joinGame: (
         gid: string,
         name: string,
@@ -37,8 +37,8 @@ export interface ClientToServerEvents {
     submitMoveOn: (callback: (data: SocketReturnStatus) => void) => void
 }
 
-export interface InterServerEvents {}
+export type InterServerEvents = Record<string, never>
 
-export interface SocketData {
+export type SocketData = {
     pid: string
 }
