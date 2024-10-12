@@ -12,6 +12,7 @@
     "type": "module",
     "license": "ISC",
     "dependencies": {
+        "@floating-ui/react": "^0.26.24",
         "@rollup/plugin-typescript": "^12.1.0",
         "@vitejs/plugin-react": "^4.3.2",
         "autoprefixer": "^10.4.20",
