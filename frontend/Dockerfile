@@ -4,7 +4,7 @@ FROM base AS dependencies
 
 WORKDIR /app/
 COPY ./frontend/package.json ./frontend/bun.lockb ./
-RUN bun i --production --frozen-lockfile
+RUN bun i --frozen-lockfile
 
 FROM base AS build
 
