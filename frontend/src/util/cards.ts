@@ -60,9 +60,9 @@ export const cardValueToHumanStr = [
 
 export function cardToCardURL(card: Card, balatro: boolean): string {
     if (balatro)
-        return `${settings.BASE_URL}cards/balatro/${
-            cardSuitToStr[card.suit]
-        }-${cardValueToStr[card.value]}.png`
+        return `${settings.BASE_URL}cards/balatro/${cardSuitToStr[card.suit]}-${
+            cardValueToStr[card.value]
+        }.png`
     return `${settings.BASE_URL}cards/${cardSuitToStr[card.suit]}-${
         cardValueToStr[card.value]
     }.svg`

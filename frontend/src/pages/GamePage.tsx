@@ -37,16 +37,46 @@ type BetHistoryData =
           pass: false
       }
 
-const showBettingHistory = (history: BetHistoryData[], idx: number) => {
+const showBettingHistory = (
+    history: BetHistoryData[],
+    idx: number,
+    startColumn: number,
+) => {
     return history
         .filter((_, i) => i % 4 === idx)
         .map((bet, index) => {
-            if (bet.pass) return <Centred key={index}>P</Centred>
-            if (bet.fill) return <Centred key={index}>{bet.fillString}</Centred>
+            if (bet.pass)
+                return (
+                    <Centred
+                        key={index}
+                        style={{
+                            gridColumnStart: startColumn + index,
+                            gridColumnEnd: startColumn + index,
+                        }}
+                    >
+                        P
+                    </Centred>
+                )
+            if (bet.fill)
+                return (
+                    <Centred
+                        key={index}
+                        style={{
+                            gridColumnStart: startColumn + index,
+                            gridColumnEnd: startColumn + index,
+                        }}
+                    >
+                        {bet.fillString}
+                    </Centred>
+                )
             else
                 return (
                     <Centred
                         key={index}
+                        style={{
+                            gridColumnStart: startColumn + index,
+                            gridColumnEnd: startColumn + index,
+                        }}
                         className={`${
                             bet.winning ? "border rounded-md px-2 py-1" : ""
                         }`}
@@ -169,6 +199,15 @@ function GamePage() {
         ),
     ]
 
+    const hasPointsColumn =
+        gameState.gameState === GameState.PLAYING ||
+        gameState.gameState === GameState.ROUND_END ||
+        gameState.gameState === GameState.GAME_END
+    const hasBetColumns = numBetCols > 0
+
+    const numCols =
+        numBetCols + 2 + (hasBetColumns ? 1 : 0) + (hasPointsColumn ? 2 : 0)
+
     return (
         <>
             <SetTitle title={`Room ${gameState.roomCode}`} />
@@ -184,21 +223,46 @@ function GamePage() {
                 <div
                     className="grid gap-x-2 gap-y-1 text-xl"
                     style={{
-                        gridTemplateColumns: `repeat(${numBetCols + 3}, auto)`,
+                        gridTemplateColumns: `repeat(${numCols}, auto)`,
+                        gridTemplateRows:
+                            numCols > 2 ? `repeat(6, auto)` : `repeat(4, auto)`,
                     }}
                 >
                     <div />
                     <div />
-                    <Centred>
-                        {gameState.gameState === GameState.PLAYING ||
-                        gameState.gameState === GameState.ROUND_END ||
-                        gameState.gameState === GameState.GAME_END
-                            ? "Pts"
-                            : ""}
-                    </Centred>
+                    {hasPointsColumn && (
+                        <>
+                            <div className="border-l-2 row-start-1 row-end-1 -mb-1 col-start-3 col-end-3" />
+                            <Centred>Pts</Centred>
+                        </>
+                    )}
+                    {hasBetColumns && (
+                        <div
+                            className={`border-l-2 row-start-1 row-end-1 -mb-1 ${
+                                hasPointsColumn
+                                    ? "col-start-5 col-end-5"
+                                    : "col-start-3 col-end-3"
+                            }`}
+                        />
+                    )}
                     {Array.from({ length: numBetCols }, (_, idx) => (
                         <Centred key={idx}>Bet {idx + 1}</Centred>
                     ))}
+                    {numCols > 2 && (
+                        <div className="border-t-2 col-span-full" />
+                    )}
+                    {hasPointsColumn && (
+                        <div className="border-l-2 row-start-3 row-end-7 -mt-1 col-start-3 col-end-3" />
+                    )}
+                    {hasBetColumns && (
+                        <div
+                            className={`border-l-2 row-start-3 row-end-7 -mt-1 ${
+                                hasPointsColumn
+                                    ? "col-start-5 col-end-5"
+                                    : "col-start-3 col-end-3"
+                            }`}
+                        />
+                    )}
                     {gameState.playerData.playerNames.map(
                         (player, idx: number) => (
                             <>
@@ -214,16 +278,16 @@ function GamePage() {
                                 >
                                     {player}
                                 </Centred>
-                                <Centred>
-                                    {gameState.gameState ===
-                                        GameState.PLAYING ||
-                                    gameState.gameState ===
-                                        GameState.ROUND_END ||
-                                    gameState.gameState === GameState.GAME_END
-                                        ? `${gameState.tricksWon[idx].length}`
-                                        : ""}
-                                </Centred>
-                                {showBettingHistory(history, idx)}
+                                {hasPointsColumn && (
+                                    <Centred className="col-start-4 col-end-4">
+                                        {gameState.tricksWon[idx].length}
+                                    </Centred>
+                                )}
+                                {showBettingHistory(
+                                    history,
+                                    idx,
+                                    numCols - numBetCols + 1,
+                                )}
                             </>
                         ),
                     )}

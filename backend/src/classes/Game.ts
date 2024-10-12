@@ -170,8 +170,8 @@ export class Game {
             this.resetState()
             hands = dealHands()
         } else {
-            hands = Array.from(this.players.values()).map(
-                (player) => player.cards,
+            hands = this.playerOrder.map(
+                (player) => this.players.get(player)!.cards,
             )
         }
         let lowestScore = 5

@@ -1,7 +1,16 @@
-function Centred(props: { children: React.ReactNode; className?: string }) {
+import { ReactNode, CSSProperties } from "react"
+
+function Centred(props: {
+    children: ReactNode
+    className?: string
+    style?: CSSProperties
+}) {
     return (
         <div
-            className={`${props.className} flex justify-center items-center h-full w-full`}
+            className={`${
+                props.className ?? ""
+            } flex justify-center items-center h-full w-full`}
+            style={props.style}
         >
             {props.children}
         </div>
