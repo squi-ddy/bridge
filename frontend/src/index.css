@@ -38,44 +38,4 @@
     body {
         @apply bg-gray-900 text-white font-nunito;
     }
-
-    /* html {
-        font-size: 7px;
-    }
-
-    @media screen(md) {
-        html {
-            font-size: 8px;
-        }
-    }
-
-    @media screen(lg) {
-        html {
-            font-size: 9px;
-        }
-    }
-
-    @media screen(xl) {
-        html {
-            font-size: 11px;
-        }
-    }
-
-    @media screen(2xl) {
-        html {
-            font-size: 11.5px;
-        }
-    }
-
-    @media screen(3xl) {
-        html {
-            font-size: 14px;
-        }
-    }
-
-    @media screen(4xl) {
-        html {
-            font-size: 20px;
-        }
-    } */
 }

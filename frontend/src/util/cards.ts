@@ -1,3 +1,4 @@
+import { settings } from "@/settings"
 import { Card } from "@backend/types/Card"
 
 const cardValueToStr = [
@@ -59,10 +60,10 @@ export const cardValueToHumanStr = [
 
 export function cardToCardURL(card: Card, balatro: boolean): string {
     if (balatro)
-        return `${import.meta.env.BASE_URL}cards/balatro/${
+        return `${settings.BASE_URL}cards/balatro/${
             cardSuitToStr[card.suit]
         }-${cardValueToStr[card.value]}.png`
-    return `${import.meta.env.BASE_URL}cards/${cardSuitToStr[card.suit]}-${
+    return `${settings.BASE_URL}cards/${cardSuitToStr[card.suit]}-${
         cardValueToStr[card.value]
     }.svg`
     // if(balatro) return `http://localhost:3000/cards/balatro/${cardSuitToStr[card.suit]}-${cardValueToStr[card.value]}.png`
