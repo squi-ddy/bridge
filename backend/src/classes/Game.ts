@@ -445,8 +445,8 @@ export class Game {
 
     submitMoveOn(pid: string): boolean {
         if (
-            this.gameState !== GameState.PLAYING &&
-            this.gameState !== GameState.ROUND_END
+            this.gameState !== GameState.ROUND_END &&
+            this.gameState !== GameState.GAME_END
         ) {
             return false
         }
