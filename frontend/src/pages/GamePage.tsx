@@ -146,8 +146,8 @@ function GamePage() {
         ),
     ]
     if (
-        gameState.gameState !== GameState.LOBBY &&
-        gameState.gameState !== GameState.WASH
+        gameState.gameState !== GameState.WASH &&
+        gameState.gameState !== GameState.BID
     ) {
         // add winning bet
         const winningBet = gameState.currentBet
@@ -162,8 +162,8 @@ function GamePage() {
         ...Array.from<unknown, BetHistoryData>(
             { length: numBetCols * 4 - history.length },
             () =>
-                gameState.gameState !== GameState.LOBBY &&
-                gameState.gameState !== GameState.WASH
+                gameState.gameState !== GameState.WASH &&
+                gameState.gameState !== GameState.BID
                     ? { fill: true, pass: false, fillString: "-" }
                     : { fill: true, fillString: "", pass: false },
         ),
@@ -182,7 +182,7 @@ function GamePage() {
 
             <div className="flex flex-col gap-2 justify-center items-center border-b-2 p-2 w-full grow">
                 <div
-                    className="grid gap-x-4 gap-y-1 text-xl"
+                    className="grid gap-x-2 gap-y-1 text-xl"
                     style={{
                         gridTemplateColumns: `repeat(${numBetCols + 3}, auto)`,
                     }}
@@ -236,7 +236,7 @@ function GamePage() {
                 <p className="text-2xl">
                     {countCardsOfSuit(gameState.playerData.hand!)}
                 </p>
-                <div className="flex flex-row w-full mb-4 justify-center">
+                <div className="flex flex-row w-full gap-2 mb-4 justify-center">
                     {gameState.playerData.hand
                         ?.map((card, idx) => ({
                             card: card,
