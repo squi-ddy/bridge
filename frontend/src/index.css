@@ -9,6 +9,10 @@
         font-family: "Nunito", sans-serif;
     }
 
+    .font-balatro {
+        font-family: "Balatro", sans-serif;
+    }
+
     .nav-button.active {
         @apply bg-sky-100 text-sky-600 font-semibold;
     }
@@ -36,6 +40,11 @@
     }
 
     body {
-        @apply bg-gray-900 text-white font-nunito;
+        @apply bg-gray-900 text-white;
+    }
+
+    @font-face {
+        font-family: "Balatro";
+        src: url("/fonts/balatro.ttf") format("truetype");
     }
 }

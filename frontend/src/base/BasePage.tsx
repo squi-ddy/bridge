@@ -84,7 +84,6 @@ function BasePage(props: { children?: React.ReactNode }) {
                 // already connected
                 alert("You're already connected!")
                 socket.disconnect()
-                window.close()
             } else {
                 // success
                 console.log("Reconnected")
@@ -112,12 +111,16 @@ function BasePage(props: { children?: React.ReactNode }) {
     }
 
     return (
-        <div id="root">
+        <div id="root" className="font-nunito">
             <SettingsContext.Provider value={{ settings, setSettings }}>
                 <SocketContext.Provider value={socketContextValue}>
-                    <div className="bg-gradient-to-r from-sky-900 to-sky-800 w-full">
-                        <div className="px-5 flex items-center justify-center p-2 gap-2">
-                            <p className="text-5xl justify-self-start my-1 font-bold text-orange-400 drop-shadow-md">
+                    <div className="bg-gradient-to-r from-sky-900 to-sky-800 w-full h-20">
+                        <div className="px-5 flex items-center justify-center p-2 gap-2 h-full">
+                            <p
+                                className={`text-5xl text-orange-400 drop-shadow-lg font-bold ${
+                                    settings.balatro ? "font-balatro" : ""
+                                }`}
+                            >
                                 <span
                                     className="cursor-pointer"
                                     onClick={() =>

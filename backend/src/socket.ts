@@ -1,4 +1,3 @@
-import { Game } from "classes/Game"
 import { Socket } from "socket.io"
 import { Bet } from "types/Bet"
 import { Card } from "types/Card"
@@ -10,9 +9,11 @@ import {
 } from "types/Socket"
 import { SocketReturnData, SocketReturnStatus } from "types/SocketReturn"
 import { v4 as uuidv4 } from "uuid"
+import { addGame, deleteGame, getGame } from "./games"
+import { settings } from "./settings"
 
-const games = new Map<string, Game>()
 const pidToGid = new Map<string, string>()
+const reconnectionTimeouts = new Map<string, NodeJS.Timeout>()
 
 export function onConnection(
     socket: Socket<
@@ -34,10 +35,10 @@ export function onConnection(
             if (!gid.match(/^[A-Z]{4}$/)) {
                 return callback({ status: false })
             }
-            if (!games.has(gid)) {
-                games.set(gid, new Game(gid))
+            if (!getGame(gid)) {
+                addGame(gid)
             }
-            const game = games.get(gid)!
+            const game = getGame(gid)!
             const pid = uuidv4()
             pidToGid.set(pid, gid)
             const status = game.addPlayer(socket, pid, name)
@@ -57,14 +58,14 @@ export function onConnection(
             if (!gid) {
                 return callback({ status: false })
             }
-            const game = games.get(gid)
+            const game = getGame(gid)
             if (!game) {
                 return callback({ status: false })
             }
             if (game.removePlayer(socket.data.pid)) {
                 pidToGid.delete(socket.data.pid)
                 socket.data = { pid: "" }
-                if (game.isEmpty()) games.delete(gid)
+                if (game.isEmpty()) deleteGame(gid)
                 return callback({ status: true })
             } else {
                 return callback({ status: false })
@@ -82,13 +83,15 @@ export function onConnection(
             if (!gid) {
                 return callback({ status: false })
             }
-            const game = games.get(gid)
+            const game = getGame(gid)
             if (!game) {
                 return callback({ status: false })
             }
             const status = game.resyncSocket(pid, socket)
             if (status === 2) {
                 socket.data = { pid }
+                clearTimeout(reconnectionTimeouts.get(pid))
+                reconnectionTimeouts.delete(pid)
             }
             return callback({ status: true, data: status })
         },
@@ -99,7 +102,7 @@ export function onConnection(
         if (!gid) {
             return
         }
-        const game = games.get(gid)
+        const game = getGame(gid)
         if (!game) {
             return
         }
@@ -114,7 +117,7 @@ export function onConnection(
         if (!gid) {
             return
         }
-        const game = games.get(gid)
+        const game = getGame(gid)
         if (!game) {
             return
         }
@@ -131,7 +134,7 @@ export function onConnection(
             if (!gid) {
                 return callback({ status: false })
             }
-            const game = games.get(gid)
+            const game = getGame(gid)
             if (!game) {
                 return callback({ status: false })
             }
@@ -151,7 +154,7 @@ export function onConnection(
             if (!gid) {
                 return callback({ status: false })
             }
-            const game = games.get(gid)
+            const game = getGame(gid)
             if (!game) {
                 return callback({ status: false })
             }
@@ -166,7 +169,7 @@ export function onConnection(
             if (!gid) {
                 return callback({ status: false })
             }
-            const game = games.get(gid)
+            const game = getGame(gid)
             if (!game) {
                 return callback({ status: false })
             }
@@ -183,7 +186,7 @@ export function onConnection(
             if (!gid) {
                 return callback({ status: false })
             }
-            const game = games.get(gid)
+            const game = getGame(gid)
             if (!game) {
                 return callback({ status: false })
             }
@@ -198,7 +201,7 @@ export function onConnection(
             if (!gid) {
                 return callback({ status: false })
             }
-            const game = games.get(gid)
+            const game = getGame(gid)
             if (!game) {
                 return callback({ status: false })
             }
@@ -213,10 +216,20 @@ export function onConnection(
             if (!gid) {
                 return
             }
-            const game = games.get(gid)
+            const game = getGame(gid)
             if (game) {
                 game.removeSocket(pid)
             }
+            reconnectionTimeouts.set(
+                pid,
+                setTimeout(() => {
+                    if (game) {
+                        game.removePlayer(pid)
+                        if (game.isEmpty()) deleteGame(gid)
+                    }
+                    pidToGid.delete(pid)
+                }, settings.RECONNECTION_TIMEOUT),
+            )
         }
     })
 }

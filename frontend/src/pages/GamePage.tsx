@@ -132,7 +132,7 @@ function GamePage() {
         (card: CardWithValid) => {
             if (gameState?.gameState !== GameState.PLAYING) return ""
             if (!isActive(gameState.playerData.order)) return ""
-            return card.valid ? "hover:-translate-y-5" : "opacity-50"
+            return card.valid ? "hover:-translate-y-5" : "brightness-50"
         },
         [isActive, gameState],
     )
@@ -207,6 +207,13 @@ function GamePage() {
 
     const numCols =
         numBetCols + 2 + (hasBetColumns ? 1 : 0) + (hasPointsColumn ? 2 : 0)
+
+    const cardGap = `min(calc(calc(90vw - 10rem) / ${
+        gameState.playerData.hand.length - 1
+    }), 5rem)`
+    const handWidth = `calc(calc(${cardGap} * ${
+        gameState.playerData.hand.length - 1
+    }) + 10rem)`
 
     return (
         <>
@@ -300,24 +307,34 @@ function GamePage() {
                 <p className="text-2xl">
                     {countCardsOfSuit(gameState.playerData.hand!)}
                 </p>
-                <div className="flex flex-row w-full gap-2 mb-4 justify-center">
+                <div className="relative mb-4" style={{ width: handWidth }}>
                     {gameState.playerData.hand
                         ?.map((card, idx) => ({
                             card: card,
                             valid: gameState.playerData.cardValid[idx],
                         }))
                         .sort((a, b) => cardSort(a, b, settings.balatro))
-                        .map((card) => (
+                        .map((card, idx) => (
                             <CardImage
                                 key={cardToCardURL(card.card, settings.balatro)}
                                 card={card.card}
                                 balatro={settings.balatro}
-                                className={`w-[6%] transition-transform duration-100 ${getCardImageClassName(
+                                className={`${
+                                    idx > 0 ? "absolute top-0" : ""
+                                } shadow transition-transform duration-100 ${getCardImageClassName(
                                     card,
                                 )}`}
                                 onClick={() => {
                                     if (card.valid) playCard(card.card)
                                 }}
+                                style={
+                                    idx > 0
+                                        ? {
+                                              zIndex: idx,
+                                              left: `calc(${idx} * ${cardGap})`,
+                                          }
+                                        : {}
+                                }
                             />
                         ))}
                 </div>

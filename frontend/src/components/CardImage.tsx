@@ -12,9 +12,7 @@ function CardImage(props: {
     return (
         <img
             src={cardToCardURL(props.card, props.balatro)}
-            className={`${props.className} ${
-                props.balatro ? "rounded-lg" : "rounded-sm"
-            }`}
+            className={`${props.className ?? ""} w-40 rounded-lg`}
             style={
                 props.balatro
                     ? { ...props.style, imageRendering: "pixelated" }
