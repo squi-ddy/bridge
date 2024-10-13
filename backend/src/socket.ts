@@ -219,17 +219,15 @@ export function onConnection(
             const game = getGame(gid)
             if (game) {
                 game.removeSocket(pid)
-            }
-            reconnectionTimeouts.set(
-                pid,
-                setTimeout(() => {
-                    if (game) {
+                reconnectionTimeouts.set(
+                    pid,
+                    setTimeout(() => {
                         game.removePlayer(pid)
                         if (game.isEmpty()) deleteGame(gid)
-                    }
-                    pidToGid.delete(pid)
-                }, settings.RECONNECTION_TIMEOUT),
-            )
+                        pidToGid.delete(pid)
+                    }, settings.RECONNECTION_TIMEOUT),
+                )
+            }
         }
     })
 }
