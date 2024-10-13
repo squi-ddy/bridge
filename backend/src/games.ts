@@ -1,4 +1,4 @@
-import { Game } from "./classes/Game";
+import { Game } from "./classes/Game"
 
 const games = new Map<string, Game>()
 
