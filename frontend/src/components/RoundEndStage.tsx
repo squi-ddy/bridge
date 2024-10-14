@@ -28,7 +28,7 @@ function RoundEndStage() {
             setTimeLeft((timeLeft) => timeLeft - 1)
         }, 1000)
         // Cleanup the timer when the component unmounts
-        return () => clearInterval(timer.current!)
+        return () => clearInterval(timer.current)
     }, [])
 
     if (timeLeft === 0) {
@@ -52,6 +52,8 @@ function RoundEndStage() {
             <Button
                 text="Next"
                 onClick={() => {
+                    clearInterval(timer.current)
+                    setTimeLeft(10)
                     socket?.emitWithAck("submitMoveOn")
                     setSubmittedMoveOn(true)
                 }}
