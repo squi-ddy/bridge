@@ -208,7 +208,7 @@ function GamePage() {
     const numCols =
         numBetCols + 2 + (hasBetColumns ? 1 : 0) + (hasPointsColumn ? 2 : 0)
 
-    const cardGap = `min(calc(calc(90vw - 10rem) / ${
+    const cardGap = gameState.playerData.hand.length === 1 ? "0px" : `min(calc(calc(90vw - 10rem) / ${
         gameState.playerData.hand.length - 1
     }), 5rem)`
     const handWidth = `calc(calc(${cardGap} * ${
