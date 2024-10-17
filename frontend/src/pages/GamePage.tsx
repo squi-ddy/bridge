@@ -307,7 +307,7 @@ function GamePage() {
                 <p className="text-2xl">
                     {countCardsOfSuit(gameState.playerData.hand!)}
                 </p>
-                <div className="relative mb-4 -z-10" style={{ width: handWidth }}>
+                <div className="relative mb-4" style={{ width: handWidth }}>
                     {gameState.playerData.hand
                         ?.map((card, idx) => ({
                             card: card,

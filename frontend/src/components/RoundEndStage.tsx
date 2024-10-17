@@ -10,7 +10,7 @@ function RoundEndStage() {
 
     const [submittedMoveOn, setSubmittedMoveOn] = useState(false)
     const [timeLeft, setTimeLeft] = useState(10)
-    const timer = useRef<NodeJS.Timeout | null>(null)
+    const timer = useRef<NodeJS.Timeout | undefined>(undefined)
 
     const currentBet = gameState!.currentBet
 
@@ -34,7 +34,7 @@ function RoundEndStage() {
     if (timeLeft === 0) {
         socket?.emitWithAck("submitMoveOn")
         clearInterval(timer.current!)
-        timer.current = null
+        timer.current = undefined
     }
 
     return (

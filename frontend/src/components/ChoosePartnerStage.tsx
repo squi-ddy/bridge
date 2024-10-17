@@ -90,6 +90,7 @@ function ChoosePartnerStage() {
                         options={cardValueOptions}
                         width="w-52"
                         errorTextSize="text-xl"
+                        z="z-10"
                     />
                     of{" "}
                     <FormSelectionInput
@@ -99,6 +100,7 @@ function ChoosePartnerStage() {
                         options={cardSuitOptions}
                         width="w-52"
                         errorTextSize="text-xl"
+                        z="z-10"
                     />
                 </div>
                 <Button
