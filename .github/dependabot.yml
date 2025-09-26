@@ -1,0 +1,26 @@
+version: 2
+updates:
+  - package-ecosystem: "bun"
+    directory: "/frontend/"
+    schedule:
+      interval: monthly
+    groups:
+      dependencies:
+        applies-to: version-updates
+        patterns:
+          - "*"
+
+  - package-ecosystem: "bun"
+    directory: "/backend/"
+    schedule:
+      interval: monthly
+    groups:
+      dependencies:
+        applies-to: version-updates
+        patterns:
+          - "*"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: monthly
