@@ -3,7 +3,7 @@ FROM oven/bun:alpine AS base
 FROM base AS dependencies
 
 WORKDIR /app/
-COPY ./frontend/package.json ./frontend/bun.lockb ./
+COPY ./frontend/package.json ./frontend/bun.lock ./
 RUN bun i --frozen-lockfile
 
 FROM base AS build

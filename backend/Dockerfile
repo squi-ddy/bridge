@@ -3,7 +3,7 @@ FROM oven/bun:alpine AS base
 FROM base AS builder
 
 WORKDIR /app/
-COPY package.json bun.lockb ./
+COPY package.json bun.lock ./
 RUN bun i --frozen-lockfile
 COPY . .
 RUN bun run build
