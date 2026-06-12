@@ -1,16 +1,21 @@
-import { SocketContext } from "@/base/BasePage"
-import { useContext, useEffect, useState, useRef } from "react"
-import PlayingStageCards from "./PlayingStageCards"
-import { cardSuitToSymbol, cardValueToHumanStr } from "@/util/cards"
-import { Card } from "@backend/types/Card"
-import Button from "./Button"
+import { SocketContext } from "@/base/BasePage.js"
+import { use, useState } from "react"
+import PlayingStageCards from "./PlayingStageCards.js"
+import { cardSuitToSymbol, cardValueToHumanStr } from "@/util/cards.js"
+import { Card } from "@backend/types/Card.js"
+import Button from "./Button.js"
+import { useInterval } from "react-use"
 
 function RoundEndStage() {
-    const { gameState, socket } = useContext(SocketContext)
+    const { gameState, socket } = use(SocketContext)
 
     const [submittedMoveOn, setSubmittedMoveOn] = useState(false)
     const [timeLeft, setTimeLeft] = useState(10)
-    const timer = useRef<NodeJS.Timeout | undefined>(undefined)
+
+    useInterval(
+        () => setTimeLeft((timeLeft) => timeLeft - 1),
+        timeLeft > 0 && !submittedMoveOn ? 1000 : null,
+    )
 
     const currentBet = gameState!.currentBet
 
@@ -23,18 +28,8 @@ function RoundEndStage() {
         (idx) => gameState!.playerData.playerNames[(startingPlayer + idx) % 4],
     )
 
-    useEffect(() => {
-        timer.current = setInterval(() => {
-            setTimeLeft((timeLeft) => timeLeft - 1)
-        }, 1000)
-        // Cleanup the timer when the component unmounts
-        return () => clearInterval(timer.current)
-    }, [])
-
     if (timeLeft === 0) {
         socket?.emitWithAck("submitMoveOn")
-        clearInterval(timer.current!)
-        timer.current = undefined
     }
 
     return (
@@ -45,14 +40,13 @@ function RoundEndStage() {
             <p className="text-2xl">{`Partner is the ${
                 cardValueToHumanStr[gameState!.partnerCard!.value - 2]
             } of ${cardSuitToSymbol[gameState!.partnerCard!.suit]}`}</p>
-            <p className="text-3xl">{`${gameState?.playerData.playerNames[
-                gameState?.winningPlayer
-            ]} won this trick!`}</p>
+            <p className="text-3xl">{`${
+                gameState?.playerData.playerNames[gameState?.winningPlayer]
+            } won this trick!`}</p>
             <PlayingStageCards cards={cardsPlayed} playerNames={playerNames} />
             <Button
                 text="Next"
                 onClick={() => {
-                    clearInterval(timer.current)
                     setTimeLeft(10)
                     socket?.emitWithAck("submitMoveOn")
                     setSubmittedMoveOn(true)

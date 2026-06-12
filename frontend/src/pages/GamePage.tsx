@@ -1,26 +1,26 @@
-import SetTitle from "@/components/SetTitle"
+import SetTitle from "@/components/SetTitle.js"
 import { useNavigate, useParams } from "react-router-dom"
-import { useCallback, useContext, useEffect } from "react"
-import { SettingsContext, SocketContext } from "@/base/BasePage"
+import { useCallback, use, useEffect, Fragment } from "react"
+import { SettingsContext, SocketContext } from "@/base/BasePage.js"
 import {
     cardSuitToSymbol,
     cardToCardURL,
     countCardsOfSuit,
     cardSort,
-} from "@/util/cards"
-import BettingStage from "@/components/BettingStage"
-import WashStage from "@/components/WashStage"
-import ChoosePartnerStage from "@/components/ChoosePartnerStage"
-import PlayingStage from "@/components/PlayingStage"
-import { Card } from "@backend/types/Card"
-import RoundEndStage from "@/components/RoundEndStage"
-import GameEndStage from "@/components/GameEndStage"
-import CardImage from "@/components/CardImage"
-import { Bet } from "@backend/types/Bet"
-import Centred from "@/components/Centred"
-import { GameState } from "@backend/types/GameState"
+} from "@/util/cards.js"
+import BettingStage from "@/components/BettingStage.js"
+import WashStage from "@/components/WashStage.js"
+import ChoosePartnerStage from "@/components/ChoosePartnerStage.js"
+import PlayingStage from "@/components/PlayingStage.js"
+import { Card } from "@backend/types/Card.js"
+import RoundEndStage from "@/components/RoundEndStage.js"
+import GameEndStage from "@/components/GameEndStage.js"
+import CardImage from "@/components/CardImage.js"
+import { Bet } from "@backend/types/Bet.js"
+import Centred from "@/components/Centred.js"
+import { GameState } from "@backend/types/GameState.js"
 
-type BetHistoryData =
+type BetHistoryData = (
     | {
           pass: false
           fill: false
@@ -36,6 +36,7 @@ type BetHistoryData =
           fillString: string
           pass: false
       }
+) & { turn: number }
 
 const showBettingHistory = (
     history: BetHistoryData[],
@@ -48,7 +49,7 @@ const showBettingHistory = (
             if (bet.pass)
                 return (
                     <Centred
-                        key={index}
+                        key={bet.turn}
                         style={{
                             gridColumnStart: startColumn + index,
                             gridColumnEnd: startColumn + index,
@@ -60,7 +61,7 @@ const showBettingHistory = (
             if (bet.fill)
                 return (
                     <Centred
-                        key={index}
+                        key={bet.turn}
                         style={{
                             gridColumnStart: startColumn + index,
                             gridColumnEnd: startColumn + index,
@@ -72,7 +73,7 @@ const showBettingHistory = (
             else
                 return (
                     <Centred
-                        key={index}
+                        key={bet.turn}
                         style={{
                             gridColumnStart: startColumn + index,
                             gridColumnEnd: startColumn + index,
@@ -95,8 +96,8 @@ type CardWithValid = {
 function GamePage() {
     const navigate = useNavigate()
 
-    const { gameState, socket } = useContext(SocketContext)
-    const { settings } = useContext(SettingsContext)
+    const { gameState, socket } = use(SocketContext)
+    const { settings } = use(SettingsContext)
 
     const { roomCode: roomCodeParam } = useParams()
 
@@ -169,10 +170,16 @@ function GamePage() {
     if (!gameState) return <></>
 
     let history: BetHistoryData[] = [
-        ...gameState.betHistory.map<BetHistoryData>((bet) =>
+        ...gameState.betHistory.map<BetHistoryData>((bet, index) =>
             bet
-                ? { pass: false, fill: false, bet, winning: false }
-                : { pass: true, fill: false },
+                ? {
+                      turn: index,
+                      pass: false,
+                      fill: false,
+                      bet,
+                      winning: false,
+                  }
+                : { turn: index, pass: true, fill: false },
         ),
     ]
     if (
@@ -183,7 +190,13 @@ function GamePage() {
         const winningBet = gameState.currentBet
         history = [
             ...history,
-            { pass: false, fill: false, bet: winningBet, winning: true },
+            {
+                turn: history.length,
+                pass: false,
+                fill: false,
+                bet: winningBet,
+                winning: true,
+            },
         ]
     }
     const numBetCols = Math.ceil(history.length / 4)
@@ -191,11 +204,21 @@ function GamePage() {
         ...history,
         ...Array.from<unknown, BetHistoryData>(
             { length: numBetCols * 4 - history.length },
-            () =>
+            (_, index) =>
                 gameState.gameState !== GameState.WASH &&
                 gameState.gameState !== GameState.BID
-                    ? { fill: true, pass: false, fillString: "-" }
-                    : { fill: true, fillString: "", pass: false },
+                    ? {
+                          turn: history.length + index,
+                          fill: true,
+                          pass: false,
+                          fillString: "-",
+                      }
+                    : {
+                          turn: history.length + index,
+                          fill: true,
+                          fillString: "",
+                          pass: false,
+                      },
         ),
     ]
 
@@ -208,9 +231,12 @@ function GamePage() {
     const numCols =
         numBetCols + 2 + (hasBetColumns ? 1 : 0) + (hasPointsColumn ? 2 : 0)
 
-    const cardGap = gameState.playerData.hand.length === 1 ? "0px" : `min(calc(calc(90vw - 10rem) / ${
-        gameState.playerData.hand.length - 1
-    }), 5rem)`
+    const cardGap =
+        gameState.playerData.hand.length === 1
+            ? "0px"
+            : `min(calc(calc(90vw - 10rem) / ${
+                  gameState.playerData.hand.length - 1
+              }), 5rem)`
     const handWidth = `calc(calc(${cardGap} * ${
         gameState.playerData.hand.length - 1
     }) + 10rem)`
@@ -272,7 +298,7 @@ function GamePage() {
                     )}
                     {gameState.playerData.playerNames.map(
                         (player, idx: number) => (
-                            <>
+                            <Fragment key={player}>
                                 <Centred>
                                     {gameState.playerData.order === idx
                                         ? "⮕"
@@ -295,7 +321,7 @@ function GamePage() {
                                     idx,
                                     numCols - numBetCols + 1,
                                 )}
-                            </>
+                            </Fragment>
                         ),
                     )}
                 </div>

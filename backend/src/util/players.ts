@@ -1,7 +1,7 @@
-import { CensoredData } from "@/types/CensoredData"
-import { PlayerData } from "@/types/PlayerData"
-import { isCardValid } from "./cards"
-import { Card } from "@/types/Card"
+import { CensoredData } from "../types/CensoredData.js"
+import { PlayerData } from "../types/PlayerData.js"
+import { isCardValid } from "./cards.js"
+import { Card } from "../types/Card.js"
 
 export function censorPlayerData(
     players: Map<string, PlayerData>,

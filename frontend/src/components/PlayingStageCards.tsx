@@ -1,11 +1,11 @@
-import { useContext } from "react"
-import { SettingsContext } from "@/base/BasePage"
-import { cardToCardURL } from "@/util/cards"
-import { Card } from "@backend/types/Card"
-import CardImage from "./CardImage"
+import { use } from "react"
+import { SettingsContext } from "@/base/BasePage.js"
+import { cardToCardURL } from "@/util/cards.js"
+import { Card } from "@backend/types/Card.js"
+import CardImage from "./CardImage.js"
 
 function PlayingStageCards(props: { cards: Card[]; playerNames: string[] }) {
-    const { settings } = useContext(SettingsContext)
+    const { settings } = use(SettingsContext)
 
     return (
         <div className="flex w-full gap-2 mb-4 justify-center">

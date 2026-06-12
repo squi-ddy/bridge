@@ -1,11 +1,11 @@
 import { Socket } from "socket.io"
-import { Card } from "./Card"
+import { Card } from "./Card.js"
 import {
     ClientToServerEvents,
     InterServerEvents,
     ServerToClientEvents,
     SocketData,
-} from "./Socket"
+} from "./Socket.js"
 
 export type PlayerData = {
     cards: Card[]

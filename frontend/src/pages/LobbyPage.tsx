@@ -1,13 +1,13 @@
-import SetTitle from "@/components/SetTitle"
+import SetTitle from "@/components/SetTitle.js"
 import { useNavigate } from "react-router-dom"
-import Button from "@/components/Button"
-import { useContext } from "react"
-import { SocketContext } from "@/base/BasePage"
+import Button from "@/components/Button.js"
+import { use } from "react"
+import { SocketContext } from "@/base/BasePage.js"
 
 function LobbyPage() {
     const navigate = useNavigate()
 
-    const { gameState, setGameState, socket } = useContext(SocketContext)
+    const { gameState, setGameState, socket } = use(SocketContext)
 
     if (!gameState) return <></>
 

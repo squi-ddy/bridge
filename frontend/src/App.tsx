@@ -1,8 +1,8 @@
 import { useRoutes } from "react-router-dom"
-import BasePage from "./base/BasePage"
-import JoinGamePage from "./pages/JoinGamePage"
-import Page404 from "./pages/Page404"
-import GamePageRouter from "./pages/GamePageRouter"
+import BasePage from "./base/BasePage.js"
+import JoinGamePage from "./pages/JoinGamePage.js"
+import Page404 from "./pages/Page404.js"
+import GamePageRouter from "./pages/GamePageRouter.js"
 
 const routes = [
     {

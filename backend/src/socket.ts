@@ -1,16 +1,16 @@
 import { Socket } from "socket.io"
-import { Bet } from "types/Bet"
-import { Card } from "types/Card"
+import { Bet } from "./types/Bet.js"
+import { Card } from "./types/Card.js"
 import {
     ClientToServerEvents,
     InterServerEvents,
     ServerToClientEvents,
     SocketData,
-} from "types/Socket"
-import { SocketReturnData, SocketReturnStatus } from "types/SocketReturn"
+} from "./types/Socket.js"
+import { SocketReturnData, SocketReturnStatus } from "./types/SocketReturn.js"
 import { v4 as uuidv4 } from "uuid"
-import { addGame, deleteGame, getGame } from "./games"
-import { settings } from "./settings"
+import { addGame, deleteGame, getGame } from "./games.js"
+import { settings } from "./settings.js"
 
 const pidToGid = new Map<string, string>()
 const reconnectionTimeouts = new Map<string, NodeJS.Timeout>()

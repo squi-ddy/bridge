@@ -1,11 +1,11 @@
 import { Socket } from "socket.io"
-import { Bet } from "@/types/Bet"
-import { Card } from "@/types/Card"
-import { CensoredGameState } from "@/types/CensoredGameState"
-import { PlayerData } from "@/types/PlayerData"
-import { censorPlayerData, dedupeName } from "@/util/players"
-import { calculateWash, dealHands, isCardValid } from "@/util/cards"
-import { GameState } from "@/types/GameState"
+import { Bet } from "../types/Bet.js"
+import { Card } from "../types/Card.js"
+import { CensoredGameState } from "../types/CensoredGameState.js"
+import { PlayerData } from "../types/PlayerData.js"
+import { censorPlayerData, dedupeName } from "../util/players.js"
+import { calculateWash, dealHands, isCardValid } from "../util/cards.js"
+import { GameState } from "../types/GameState.js"
 
 export class Game {
     roomCode: string

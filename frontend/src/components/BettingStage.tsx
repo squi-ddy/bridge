@@ -1,10 +1,10 @@
-import { SocketContext } from "@/base/BasePage"
-import { useContext } from "react"
-import Button from "./Button"
-import { cardSuitToSymbol } from "@/util/cards"
+import { SocketContext } from "@/base/BasePage.js"
+import { use } from "react"
+import Button from "./Button.js"
+import { cardSuitToSymbol } from "@/util/cards.js"
 
 function BettingStage() {
-    const { gameState, socket } = useContext(SocketContext)
+    const { gameState, socket } = use(SocketContext)
 
     const currentBet = gameState!.currentBet
     const minContract = Math.max(1, currentBet.contract)
@@ -20,13 +20,15 @@ function BettingStage() {
                 {currentBet.contract > 0 && (
                     <p className="text-2xl">{`Current bet: ${
                         currentBet.contract
-                    } ${cardSuitToSymbol[currentBet.suit]} by ${gameState
-                        ?.playerData.playerNames[currentBet.order]}`}</p>
+                    } ${cardSuitToSymbol[currentBet.suit]} by ${
+                        gameState?.playerData.playerNames[currentBet.order]
+                    }`}</p>
                 )}
-                <p className="text-3xl">{`Waiting for ${gameState?.playerData
-                    .playerNames[
-                    gameState?.currentActivePlayer
-                ]} to bet...`}</p>
+                <p className="text-3xl">{`Waiting for ${
+                    gameState?.playerData.playerNames[
+                        gameState?.currentActivePlayer
+                    ]
+                } to bet...`}</p>
             </>
         )
     } else {
@@ -35,8 +37,9 @@ function BettingStage() {
                 {currentBet.contract > 0 && (
                     <p className="text-2xl">{`Current bet: ${
                         currentBet.contract
-                    } ${cardSuitToSymbol[currentBet.suit]} by ${gameState
-                        ?.playerData.playerNames[currentBet.order]}`}</p>
+                    } ${cardSuitToSymbol[currentBet.suit]} by ${
+                        gameState?.playerData.playerNames[currentBet.order]
+                    }`}</p>
                 )}
                 <p className="text-3xl">Choose a bet</p>
                 <div className="flex flex-col gap-2">

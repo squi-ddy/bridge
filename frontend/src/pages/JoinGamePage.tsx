@@ -1,14 +1,14 @@
-import SetTitle from "@/components/SetTitle"
+import SetTitle from "@/components/SetTitle.js"
 import { useNavigate } from "react-router-dom"
-import Button from "@/components/Button"
-import { useCallback, useContext, useEffect, useRef } from "react"
-import { SocketContext } from "@/base/BasePage"
+import Button from "@/components/Button.js"
+import { useCallback, use, useEffect, useRef } from "react"
+import { SocketContext } from "@/base/BasePage.js"
 import {
     InputErrorFunction,
     InputFunctionContainer,
     InputFunctionItems,
-} from "@/types/FormDefinition"
-import FormTextInput from "@/components/forms/FormTextInput"
+} from "@/types/FormDefinition.js"
+import FormTextInput from "@/components/forms/FormTextInput.js"
 
 const fieldNames = ["roomCode", "name"] as const
 
@@ -26,14 +26,14 @@ const defaultInputContainer = {
 } satisfies InputFunctionContainer<typeof fieldNames>
 
 function JoinGamePage() {
-    const inputContainer = useRef(defaultInputContainer)
+    const inputContainerRef = useRef(defaultInputContainer)
 
     const setSubmitFunction = useCallback(
         (key: keyof typeof defaultInputContainer) => {
             return (
                 func: (typeof defaultInputContainer)[typeof key]["submitFunc"],
             ) => {
-                inputContainer.current[key]["submitFunc"] = func
+                inputContainerRef.current[key]["submitFunc"] = func
             }
         },
         [],
@@ -42,7 +42,7 @@ function JoinGamePage() {
     const setErrorFunction = useCallback(
         (key: keyof typeof defaultInputContainer) => {
             return (func: InputErrorFunction) => {
-                inputContainer.current[key]["errorFunc"] = func
+                inputContainerRef.current[key]["errorFunc"] = func
             }
         },
         [],
@@ -50,7 +50,7 @@ function JoinGamePage() {
 
     const navigate = useNavigate()
 
-    const { gameState, socket } = useContext(SocketContext)
+    const { gameState, socket } = use(SocketContext)
 
     useEffect(() => {
         if (gameState) {
@@ -116,17 +116,19 @@ function JoinGamePage() {
                             let anyNulls = false
                             for (const field of fieldNames) {
                                 const value =
-                                    inputContainer.current[field].submitFunc()
+                                    inputContainerRef.current[
+                                        field
+                                    ].submitFunc()
                                 if (value === null) {
                                     anyNulls = true
                                     continue
                                 }
-                                inputContainer.current[field].value = value
+                                inputContainerRef.current[field].value = value
                             }
                             if (anyNulls) return
                             const roomCode =
-                                inputContainer.current.roomCode.value
-                            const name = inputContainer.current.name.value
+                                inputContainerRef.current.roomCode.value
+                            const name = inputContainerRef.current.name.value
                             const resp = await socket?.emitWithAck(
                                 "joinGame",
                                 roomCode.toUpperCase(),
@@ -140,11 +142,11 @@ function JoinGamePage() {
                                 if (!resp.code) {
                                     alert(`Internal error`)
                                 } else if (resp.code === 1) {
-                                    inputContainer.current.roomCode.errorFunc(
+                                    inputContainerRef.current.roomCode.errorFunc(
                                         "Game has already started!",
                                     )
                                 } else if (resp.code === 2) {
-                                    inputContainer.current.roomCode.errorFunc(
+                                    inputContainerRef.current.roomCode.errorFunc(
                                         "Room is full!",
                                     )
                                 }

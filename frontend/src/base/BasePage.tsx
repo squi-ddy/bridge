@@ -2,25 +2,24 @@ import {
     createContext,
     Dispatch,
     SetStateAction,
-    useCallback,
     useEffect,
     useMemo,
+    useRef,
     useState,
 } from "react"
-import { createSocket } from "@/socket"
-import { CensoredGameState } from "@backend/types/CensoredGameState"
+import { createSocket } from "@/socket.js"
+import { CensoredGameState } from "@backend/types/CensoredGameState.js"
 import {
     ClientToServerEvents,
     ServerToClientEvents,
-} from "@backend/types/Socket"
+} from "@backend/types/Socket.js"
 import { Socket } from "socket.io-client"
 
 export const SocketContext = createContext<{
     gameState: CensoredGameState | null | undefined
     setGameState?: Dispatch<SetStateAction<CensoredGameState | null>>
     socket?: Socket<ServerToClientEvents, ClientToServerEvents>
-    firstRender: boolean
-}>({ gameState: undefined, firstRender: true })
+}>({ gameState: undefined })
 
 export type SettingsType = {
     balatro: boolean
@@ -39,42 +38,29 @@ export const SettingsContext = createContext<SettingsContextType>({
 function BasePage(props: { children?: React.ReactNode }) {
     const [currentGameState, setCurrentGameState] =
         useState<CensoredGameState | null>(null)
-    const [firstRender, setFirstRender] = useState(true)
-    const [socket, setSocket] = useState<
-        Socket<ServerToClientEvents, ClientToServerEvents> | undefined
-    >(undefined)
+    const socketRef =
+        useRef<Socket<ServerToClientEvents, ClientToServerEvents>>(
+            createSocket(),
+        )
 
     useEffect(() => {
-        if (currentGameState === undefined) {
-            // doesn't count
-            return
+        const socket = socketRef.current
+        const cleanup = () => {
+            socket.off("syncState")
+            socket.disconnect()
         }
-        if (firstRender) {
-            setFirstRender(false)
-        }
-    }, [currentGameState, firstRender])
 
-    useEffect(() => {
-        const socket = createSocket()
-        setSocket(socket)
         socket.on("syncState", (state: CensoredGameState) => {
             setCurrentGameState(state)
         })
 
-        return () => {
-            socket.off("syncState")
-            socket.disconnect()
-        }
-    }, [])
-
-    const resyncGame = useCallback(async () => {
         const pid = localStorage.getItem("pid")
         if (pid === null) {
-            setCurrentGameState(null)
-            return
+            // no pid, not connected
+            return cleanup
         }
 
-        socket?.emit("reconnect", pid, (data) => {
+        socketRef.current.emit("reconnect", pid, (data) => {
             if (!data.status || data.data === 0) {
                 // failed to resync
                 console.log("Failed to reconnect")
@@ -83,26 +69,23 @@ function BasePage(props: { children?: React.ReactNode }) {
             } else if (data.data === 1) {
                 // already connected
                 alert("You're already connected!")
-                socket.disconnect()
+                socketRef.current.disconnect()
             } else {
                 // success
                 console.log("Reconnected")
             }
         })
-    }, [socket])
 
-    useEffect(() => {
-        resyncGame()
-    }, [resyncGame])
+        return cleanup
+    }, [])
 
     const socketContextValue = useMemo(() => {
         return {
             gameState: currentGameState,
             setGameState: setCurrentGameState,
-            socket,
-            firstRender,
+            socket: socketRef.current,
         }
-    }, [currentGameState, socket, firstRender])
+    }, [currentGameState])
 
     const [settings, setSettings] = useState({ balatro: false })
 
@@ -112,9 +95,9 @@ function BasePage(props: { children?: React.ReactNode }) {
 
     return (
         <div id="root" className="font-nunito">
-            <SettingsContext.Provider value={{ settings, setSettings }}>
-                <SocketContext.Provider value={socketContextValue}>
-                    <div className="bg-gradient-to-r from-sky-900 to-sky-800 w-full h-20">
+            <SettingsContext value={{ settings, setSettings }}>
+                <SocketContext value={socketContextValue}>
+                    <div className="bg-linear-to-r from-sky-900 to-sky-800 w-full h-20">
                         <div className="px-5 flex items-center justify-center p-2 gap-2 h-full">
                             <p
                                 className={`text-5xl text-orange-400 drop-shadow-lg font-bold ${
@@ -140,8 +123,8 @@ function BasePage(props: { children?: React.ReactNode }) {
                     </div>
 
                     {props.children}
-                </SocketContext.Provider>
-            </SettingsContext.Provider>
+                </SocketContext>
+            </SettingsContext>
         </div>
     )
 }

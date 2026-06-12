@@ -1,17 +1,17 @@
-import { SocketContext } from "@/base/BasePage"
-import { useCallback, useContext, useRef } from "react"
-import Button from "./Button"
+import { SocketContext } from "@/base/BasePage.js"
+import { useCallback, use, useRef } from "react"
+import Button from "./Button.js"
 import {
     cardSuitToHumanStr,
     cardSuitToSymbol,
     cardValueToHumanStr,
-} from "@/util/cards"
-import FormSelectionInput from "./forms/FormSelectionInput"
+} from "@/util/cards.js"
+import FormSelectionInput from "./forms/FormSelectionInput.js"
 import {
     InputErrorFunction,
     InputFunctionContainer,
     InputFunctionItems,
-} from "@/types/FormDefinition"
+} from "@/types/FormDefinition.js"
 
 const fieldNames = ["suit", "value"] as const
 
@@ -29,14 +29,14 @@ const defaultInputContainer = {
 } satisfies InputFunctionContainer<typeof fieldNames>
 
 function ChoosePartnerStage() {
-    const inputContainer = useRef(defaultInputContainer)
+    const inputContainerRef = useRef(defaultInputContainer)
 
     const setSubmitFunction = useCallback(
         (key: keyof typeof defaultInputContainer) => {
             return (
                 func: (typeof defaultInputContainer)[typeof key]["submitFunc"],
             ) => {
-                inputContainer.current[key]["submitFunc"] = func
+                inputContainerRef.current[key]["submitFunc"] = func
             }
         },
         [],
@@ -45,7 +45,7 @@ function ChoosePartnerStage() {
     const setErrorFunction = useCallback(
         (key: keyof typeof defaultInputContainer) => {
             return (func: InputErrorFunction) => {
-                inputContainer.current[key]["errorFunc"] = func
+                inputContainerRef.current[key]["errorFunc"] = func
             }
         },
         [],
@@ -54,7 +54,7 @@ function ChoosePartnerStage() {
     const cardSuitOptions = cardSuitToHumanStr.slice(0, 4)
     const cardValueOptions = cardValueToHumanStr.toReversed()
 
-    const { gameState, socket } = useContext(SocketContext)
+    const { gameState, socket } = use(SocketContext)
 
     const currentBet = gameState!.currentBet
 
@@ -63,13 +63,14 @@ function ChoosePartnerStage() {
             <>
                 <p className="text-2xl">{`Winning bet: ${currentBet.contract} ${
                     cardSuitToSymbol[currentBet.suit]
-                } by ${gameState?.playerData.playerNames[
-                    currentBet.order
-                ]}`}</p>
-                <p className="text-3xl">{`Waiting for ${gameState?.playerData
-                    .playerNames[
-                    gameState?.currentActivePlayer
-                ]} to choose their partner...`}</p>
+                } by ${
+                    gameState?.playerData.playerNames[currentBet.order]
+                }`}</p>
+                <p className="text-3xl">{`Waiting for ${
+                    gameState?.playerData.playerNames[
+                        gameState?.currentActivePlayer
+                    ]
+                } to choose their partner...`}</p>
             </>
         )
     } else {
@@ -78,8 +79,9 @@ function ChoosePartnerStage() {
                 {currentBet.contract > 0 && (
                     <p className="text-2xl">{`Winning bet: ${
                         currentBet.contract
-                    } ${cardSuitToSymbol[currentBet.suit]} by ${gameState
-                        ?.playerData.playerNames[currentBet.order]}`}</p>
+                    } ${cardSuitToSymbol[currentBet.suit]} by ${
+                        gameState?.playerData.playerNames[currentBet.order]
+                    }`}</p>
                 )}
                 <p className="text-3xl">Choose a partner card:</p>
                 <div className="flex gap-4 items-center text-3xl">
@@ -110,23 +112,23 @@ function ChoosePartnerStage() {
                         let anyNulls = false
                         for (const field of fieldNames) {
                             const value =
-                                inputContainer.current[field].submitFunc()
+                                inputContainerRef.current[field].submitFunc()
                             if (value === null) {
                                 anyNulls = true
                                 continue
                             }
-                            inputContainer.current[field].value = value
+                            inputContainerRef.current[field].value = value
                         }
                         if (anyNulls) return
-                        const suit = inputContainer.current.suit.value
+                        const suit = inputContainerRef.current.suit.value
                         if (suit === -1) {
-                            inputContainer.current.suit.errorFunc(
+                            inputContainerRef.current.suit.errorFunc(
                                 "Please select a suit",
                             )
                         }
-                        const value = inputContainer.current.value.value
+                        const value = inputContainerRef.current.value.value
                         if (value === -1) {
-                            inputContainer.current.value.errorFunc(
+                            inputContainerRef.current.value.errorFunc(
                                 "Please select a card value",
                             )
                         }

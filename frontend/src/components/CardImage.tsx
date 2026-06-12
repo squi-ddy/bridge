@@ -1,5 +1,5 @@
-import { cardToCardURL } from "@/util/cards"
-import { Card } from "@backend/types/Card"
+import { cardToCardURL } from "@/util/cards.js"
+import { Card } from "@backend/types/Card.js"
 import { CSSProperties } from "react"
 
 function CardImage(props: {

@@ -1,5 +1,5 @@
-import { settings } from "@/settings"
-import { Card } from "@backend/types/Card"
+import { settings } from "@/settings.js"
+import { Card } from "@backend/types/Card.js"
 
 const cardValueToStr = [
     "",

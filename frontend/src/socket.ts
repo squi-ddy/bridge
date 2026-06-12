@@ -1,9 +1,9 @@
 import { io, Socket } from "socket.io-client"
-import { settings } from "./settings"
+import { settings } from "./settings.js"
 import {
     ClientToServerEvents,
     ServerToClientEvents,
-} from "@backend/types/Socket"
+} from "@backend/types/Socket.js"
 
 export function createSocket(): Socket<
     ServerToClientEvents,

@@ -1,7 +1,7 @@
-import { Bet } from "./Bet"
-import { Card } from "./Card"
-import { CensoredData } from "./CensoredData"
-import { GameState } from "./GameState"
+import { Bet } from "./Bet.js"
+import { Card } from "./Card.js"
+import { CensoredData } from "./CensoredData.js"
+import { GameState } from "./GameState.js"
 
 export type CensoredGameState = {
     gameState: GameState

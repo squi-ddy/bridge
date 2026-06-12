@@ -1,17 +1,14 @@
 {
     "compilerOptions": {
-        "module": "es2022",
+        "module": "Node16",
         "esModuleInterop": true,
         "target": "es2017",
-        "moduleResolution": "node",
+        "moduleResolution": "node16",
         "sourceMap": true,
         "resolveJsonModule": true,
-        "baseUrl": "src",
         "strict": true,
         "skipLibCheck": true,
-        "paths": {
-            "@/*": ["./*"]
-        }
+        "rootDir": "src"
     },
     "include": ["src/**/*.ts", "src/**/*.d.ts"],
     "lib": ["es2015"]

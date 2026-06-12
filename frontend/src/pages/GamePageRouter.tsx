@@ -1,13 +1,13 @@
-import { SocketContext } from "@/base/BasePage"
-import { useContext, useEffect } from "react"
-import LobbyPage from "./LobbyPage"
-import GamePage from "./GamePage"
+import { SocketContext } from "@/base/BasePage.js"
+import { use, useEffect } from "react"
+import LobbyPage from "./LobbyPage.js"
+import GamePage from "./GamePage.js"
 import { useNavigate, useParams } from "react-router-dom"
-import { GameState } from "@backend/types/GameState"
+import { GameState } from "@backend/types/GameState.js"
 
 function GamePageRouter() {
     const navigate = useNavigate()
-    const { gameState } = useContext(SocketContext)
+    const { gameState } = use(SocketContext)
     const { roomCode: roomCodeParam } = useParams()
 
     useEffect(() => {

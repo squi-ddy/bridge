@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom"
 import { TbMoodSad } from "react-icons/tb"
-import SetTitle from "@/components/SetTitle"
+import SetTitle from "@/components/SetTitle.js"
 
 function Page404() {
     return (

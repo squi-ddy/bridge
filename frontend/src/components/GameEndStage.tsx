@@ -1,11 +1,11 @@
-import { SocketContext } from "@/base/BasePage"
-import { useContext, useState } from "react"
-import PlayingStageCards from "./PlayingStageCards"
-import { Card } from "@backend/types/Card"
-import Button from "./Button"
+import { SocketContext } from "@/base/BasePage.js"
+import { use, useState } from "react"
+import PlayingStageCards from "./PlayingStageCards.js"
+import { Card } from "@backend/types/Card.js"
+import Button from "./Button.js"
 
 function GameEndStage() {
-    const { gameState, socket } = useContext(SocketContext)
+    const { gameState, socket } = use(SocketContext)
 
     const [submittedMoveOn, setSubmittedMoveOn] = useState(false)
 

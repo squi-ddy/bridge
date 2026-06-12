@@ -1,7 +1,7 @@
-import { Bet } from "./Bet"
-import { Card } from "./Card"
-import { CensoredGameState } from "./CensoredGameState"
-import { SocketReturnData, SocketReturnStatus } from "./SocketReturn"
+import { Bet } from "./Bet.js"
+import { Card } from "./Card.js"
+import { CensoredGameState } from "./CensoredGameState.js"
+import { SocketReturnData, SocketReturnStatus } from "./SocketReturn.js"
 
 export type ServerToClientEvents = {
     syncState: (state: CensoredGameState) => void

@@ -1,9 +1,9 @@
-import { SocketContext } from "@/base/BasePage"
-import { useContext } from "react"
-import Button from "./Button"
+import { SocketContext } from "@/base/BasePage.js"
+import { use } from "react"
+import Button from "./Button.js"
 
 function WashStage() {
-    const { gameState, socket } = useContext(SocketContext)
+    const { gameState, socket } = use(SocketContext)
 
     const handPoints = gameState!.playerData.handPoints
 

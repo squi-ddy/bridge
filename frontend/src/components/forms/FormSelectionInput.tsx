@@ -2,7 +2,7 @@ import {
     InputCheckFunction,
     InputErrorFunction,
     InputSubmitFunction,
-} from "@/types/FormDefinition"
+} from "@/types/FormDefinition.js"
 import { useFloating } from "@floating-ui/react"
 import { useCallback, useState } from "react"
 
@@ -102,7 +102,7 @@ function FormSelectionInput(props: {
                 className={`border-2 rounded-xl bg-transparent ${innerTextSize} w-full h-full min-w-0
                     transition-colors flex items-center justify-center ${
                         error ? "border-red-500" : ""
-                    } 
+                    }
                     ${fieldValue === -1 ? "text-gray-400 italic" : ""} ${
                         edit ? "cursor-pointer" : ""
                     } ${dropdownOpen ? "border-sky-400" : ""}`}
@@ -135,7 +135,7 @@ function FormSelectionInput(props: {
                         >
                             {props.options.map((option, index) => (
                                 <span
-                                    key={index}
+                                    key={option}
                                     onClick={() => {
                                         setFieldValue(index)
                                         setDropdownOpen(false)
@@ -145,7 +145,7 @@ function FormSelectionInput(props: {
                                     index === props.options.length - 1
                                         ? "rounded-b-xl"
                                         : "border-b-2 border-white"
-                                } 
+                                }
                                 ${
                                     index === fieldValue ? " bg-sky-800/70" : ""
                                 }`}

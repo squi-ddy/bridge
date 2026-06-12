@@ -1,13 +1,13 @@
-import { HTMLAttributes, forwardRef } from "react"
+import { HTMLAttributes } from "react"
 
-const Button = forwardRef(function Button(
+const Button = function Button(
     props: {
         text: string
         textSize?: string
         emphasis?: boolean
         z?: string
+        ref?: React.RefObject<HTMLButtonElement> | null
     } & HTMLAttributes<HTMLButtonElement>,
-    ref: React.ForwardedRef<HTMLButtonElement>,
 ) {
     const textSize = props.textSize || "text-l"
     const emphasis = props.emphasis || false
@@ -33,10 +33,10 @@ const Button = forwardRef(function Button(
     delete tmpProps.className
     const newProps: HTMLAttributes<HTMLButtonElement> = { ...tmpProps }
     return (
-        <button ref={ref} {...newProps} className={className}>
+        <button ref={props.ref} {...newProps} className={className}>
             {props.text}
         </button>
     )
-})
+}
 
 export default Button

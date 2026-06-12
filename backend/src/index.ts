@@ -1,12 +1,12 @@
-import { settings } from "settings"
-import { onConnection } from "socket"
+import { settings } from "./settings.js"
+import { onConnection } from "./socket.js"
 import { Server } from "socket.io"
 import {
     ClientToServerEvents,
     ServerToClientEvents,
     InterServerEvents,
     SocketData,
-} from "types/Socket"
+} from "./types/Socket.js"
 
 const port = settings.PORT
 
