@@ -21,6 +21,7 @@ const io = new Server<
     InterServerEvents,
     SocketData
 >({
+    serveClient: false,
     cors: {
         origin: allowedOrigins,
     },

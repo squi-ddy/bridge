@@ -1,10 +1,11 @@
-FROM oven/bun:alpine AS base
+FROM node:alpine AS base
 
 FROM base AS dependencies
 
+RUN apk --no-cache add --virtual build-deps build-base python3
 WORKDIR /app/
-COPY ./frontend/package.json ./frontend/bun.lock ./
-RUN bun i --frozen-lockfile
+COPY package.json package-lock.json ./
+RUN npm ci --include=dev
 
 FROM base AS build
 
@@ -20,7 +21,7 @@ COPY ./frontend .
 COPY ./frontend/vite.config.ts ./vite.config.ts
 COPY ./backend/src/types ../backend/src/types
 COPY --from=dependencies /app/node_modules ./node_modules
-RUN bun run build -- --base $BASE_URL
+RUN npm run build -- --base $BASE_URL
 
 FROM busybox:musl AS deploy
 
@@ -28,4 +29,3 @@ WORKDIR /app/
 COPY --from=build /app/dist .
 COPY ./frontend/httpd.conf /etc/httpd.conf
 CMD ["busybox", "httpd", "-f", "-v", "-p", "3000", "-c", "/etc/httpd.conf"]
-

@@ -5,17 +5,18 @@
     "main": "dist/index.js",
     "scripts": {
         "start": "node dist/index.js",
-        "build": "bun build --target node src/index.ts --outdir dist",
+        "build": "ncc build src/index.ts -o dist -t -m",
         "lint": "eslint . --fix",
         "typecheck": "tsc --noemit",
         "format": "prettier --write .",
-        "precommit": "bun run format && bun run lint && bun run typecheck"
+        "precommit": "npm run format && npm run lint && npm run typecheck"
     },
     "keywords": [],
     "author": "",
     "license": "ISC",
     "devDependencies": {
         "@types/uuid": "^11.0.0",
+        "@vercel/ncc": "^0.44.0",
         "eslint": "^9.36.0",
         "typescript": "~5.9.2",
         "typescript-eslint": "^8.8.1"

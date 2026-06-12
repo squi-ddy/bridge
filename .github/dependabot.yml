@@ -1,7 +1,7 @@
 version: 2
 updates:
-  - package-ecosystem: "bun"
-    directories: 
+  - package-ecosystem: "npm"
+    directories:
       - "/frontend"
       - "/backend"
     schedule:
