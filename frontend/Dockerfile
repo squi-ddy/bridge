@@ -4,7 +4,7 @@ FROM base AS dependencies
 
 RUN apk --no-cache add --virtual build-deps build-base python3
 WORKDIR /app/
-COPY package.json package-lock.json ./
+COPY ./frontend/package.json ./frontend/package-lock.json ./
 RUN npm ci --include=dev
 
 FROM base AS build
