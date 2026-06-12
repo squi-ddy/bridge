@@ -4,10 +4,9 @@ import {
     SetStateAction,
     useEffect,
     useMemo,
-    useRef,
     useState,
 } from "react"
-import { createSocket } from "@/socket.js"
+import { socket } from "@/socket.js"
 import { CensoredGameState } from "@backend/types/CensoredGameState.js"
 import {
     ClientToServerEvents,
@@ -38,13 +37,8 @@ export const SettingsContext = createContext<SettingsContextType>({
 function BasePage(props: { children?: React.ReactNode }) {
     const [currentGameState, setCurrentGameState] =
         useState<CensoredGameState | null>(null)
-    const socketRef =
-        useRef<Socket<ServerToClientEvents, ClientToServerEvents>>(
-            createSocket(),
-        )
 
     useEffect(() => {
-        const socket = socketRef.current
         const cleanup = () => {
             socket.off("syncState")
             socket.disconnect()
@@ -60,7 +54,7 @@ function BasePage(props: { children?: React.ReactNode }) {
             return cleanup
         }
 
-        socketRef.current.emit("reconnect", pid, (data) => {
+        socket.emit("reconnect", pid, (data) => {
             if (!data.status || data.data === 0) {
                 // failed to resync
                 console.log("Failed to reconnect")
@@ -69,7 +63,7 @@ function BasePage(props: { children?: React.ReactNode }) {
             } else if (data.data === 1) {
                 // already connected
                 alert("You're already connected!")
-                socketRef.current.disconnect()
+                socket.disconnect()
             } else {
                 // success
                 console.log("Reconnected")
@@ -83,7 +77,7 @@ function BasePage(props: { children?: React.ReactNode }) {
         return {
             gameState: currentGameState,
             setGameState: setCurrentGameState,
-            socket: socketRef.current,
+            socket,
         }
     }, [currentGameState])
 

@@ -5,12 +5,10 @@ import {
     ServerToClientEvents,
 } from "@backend/types/Socket.js"
 
-export function createSocket(): Socket<
-    ServerToClientEvents,
-    ClientToServerEvents
-> {
-    return io(settings.SOCKET_URL, {
+export const socket: Socket<ServerToClientEvents, ClientToServerEvents> = io(
+    settings.SOCKET_URL,
+    {
         transports: ["websocket"],
         path: settings.SOCKET_SERVER_PATH,
-    })
-}
+    },
+)
