@@ -1,5 +1,5 @@
-import { SocketContext } from "@/base/BasePage.js"
-import { useCallback, use, useRef } from "react"
+import SocketContext from "@/base/SocketContext.js"
+import { use, useRef } from "react"
 import Button from "./Button.js"
 import {
     cardSuitToHumanStr,
@@ -8,7 +8,6 @@ import {
 } from "@/util/cards.js"
 import FormSelectionInput from "./forms/FormSelectionInput.js"
 import {
-    InputErrorFunction,
     InputFunctionContainer,
     InputFunctionItems,
 } from "@/types/FormDefinition.js"
@@ -28,28 +27,35 @@ const defaultInputContainer = {
     } as InputFunctionItems<number>,
 } satisfies InputFunctionContainer<typeof fieldNames>
 
+// transform the defaultInputContainer into a record of functions that set the submitFunc and errorFunc for each field
+const setSubmitFunctions = fieldNames.reduce(
+    (acc, field) => {
+        acc[field] = (func: InputFunctionItems<number>["submitFunc"]) => {
+            defaultInputContainer[field].submitFunc = func
+        }
+        return acc
+    },
+    {} as Record<
+        (typeof fieldNames)[number],
+        (func: InputFunctionItems<number>["submitFunc"]) => void
+    >,
+)
+
+const setErrorFunctions = fieldNames.reduce(
+    (acc, field) => {
+        acc[field] = (func: InputFunctionItems<number>["errorFunc"]) => {
+            defaultInputContainer[field].errorFunc = func
+        }
+        return acc
+    },
+    {} as Record<
+        (typeof fieldNames)[number],
+        (func: InputFunctionItems<number>["errorFunc"]) => void
+    >,
+)
+
 function ChoosePartnerStage() {
     const inputContainerRef = useRef(defaultInputContainer)
-
-    const setSubmitFunction = useCallback(
-        (key: keyof typeof defaultInputContainer) => {
-            return (
-                func: (typeof defaultInputContainer)[typeof key]["submitFunc"],
-            ) => {
-                inputContainerRef.current[key]["submitFunc"] = func
-            }
-        },
-        [],
-    )
-
-    const setErrorFunction = useCallback(
-        (key: keyof typeof defaultInputContainer) => {
-            return (func: InputErrorFunction) => {
-                inputContainerRef.current[key]["errorFunc"] = func
-            }
-        },
-        [],
-    )
 
     const cardSuitOptions = cardSuitToHumanStr.slice(0, 4)
     const cardValueOptions = cardValueToHumanStr.toReversed()
@@ -87,8 +93,8 @@ function ChoosePartnerStage() {
                 <div className="flex gap-4 items-center text-3xl">
                     <FormSelectionInput
                         fieldName="value"
-                        setSubmitFunction={setSubmitFunction("value")}
-                        setErrorFunction={setErrorFunction("value")}
+                        setSubmitFunction={setSubmitFunctions.value}
+                        setErrorFunction={setErrorFunctions.value}
                         options={cardValueOptions}
                         width="w-52"
                         errorTextSize="text-xl"
@@ -97,8 +103,8 @@ function ChoosePartnerStage() {
                     of{" "}
                     <FormSelectionInput
                         fieldName="suit"
-                        setSubmitFunction={setSubmitFunction("suit")}
-                        setErrorFunction={setErrorFunction("suit")}
+                        setSubmitFunction={setSubmitFunctions.suit}
+                        setErrorFunction={setErrorFunctions.suit}
                         options={cardSuitOptions}
                         width="w-52"
                         errorTextSize="text-xl"

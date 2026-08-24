@@ -9,8 +9,8 @@
         "allowSyntheticDefaultImports": true,
         "strict": true,
         "forceConsistentCasingInFileNames": true,
-        "module": "Node16",
-        "moduleResolution": "Node16",
+        "module": "ESNext",
+        "moduleResolution": "bundler",
         "resolveJsonModule": true,
         "isolatedModules": true,
         "noEmit": true,
@@ -21,15 +21,5 @@
             "@backend/types/*": ["../backend/src/types/*"]
         }
     },
-    "include": [
-        "src/**/*.tsx",
-        "src/**/*.ts",
-        "src/**/*.d.ts",
-        "src/**/*.json"
-    ],
-    "references": [
-        {
-            "path": "./tsconfig.node.json"
-        }
-    ]
+    "include": ["src/**/*.tsx", "src/**/*.ts", "src/**/*.d.ts", "src/**/*.json"]
 }

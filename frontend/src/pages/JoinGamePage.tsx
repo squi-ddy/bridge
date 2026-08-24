@@ -1,10 +1,9 @@
 import SetTitle from "@/components/SetTitle.js"
 import { useNavigate } from "react-router-dom"
 import Button from "@/components/Button.js"
-import { useCallback, use, useEffect, useRef } from "react"
-import { SocketContext } from "@/base/BasePage.js"
+import { use, useEffect, useRef } from "react"
+import SocketContext from "@/base/SocketContext.js"
 import {
-    InputErrorFunction,
     InputFunctionContainer,
     InputFunctionItems,
 } from "@/types/FormDefinition.js"
@@ -25,32 +24,39 @@ const defaultInputContainer = {
     } as InputFunctionItems<string>,
 } satisfies InputFunctionContainer<typeof fieldNames>
 
+// transform the defaultInputContainer into a record of functions that set the submitFunc and errorFunc for each field
+const setSubmitFunctions = fieldNames.reduce(
+    (acc, field) => {
+        acc[field] = (func: InputFunctionItems<string>["submitFunc"]) => {
+            defaultInputContainer[field].submitFunc = func
+        }
+        return acc
+    },
+    {} as Record<
+        (typeof fieldNames)[number],
+        (func: InputFunctionItems<string>["submitFunc"]) => void
+    >,
+)
+
+const setErrorFunctions = fieldNames.reduce(
+    (acc, field) => {
+        acc[field] = (func: InputFunctionItems<string>["errorFunc"]) => {
+            defaultInputContainer[field].errorFunc = func
+        }
+        return acc
+    },
+    {} as Record<
+        (typeof fieldNames)[number],
+        (func: InputFunctionItems<string>["errorFunc"]) => void
+    >,
+)
+
 function JoinGamePage() {
     const inputContainerRef = useRef(defaultInputContainer)
 
-    const setSubmitFunction = useCallback(
-        (key: keyof typeof defaultInputContainer) => {
-            return (
-                func: (typeof defaultInputContainer)[typeof key]["submitFunc"],
-            ) => {
-                inputContainerRef.current[key]["submitFunc"] = func
-            }
-        },
-        [],
-    )
-
-    const setErrorFunction = useCallback(
-        (key: keyof typeof defaultInputContainer) => {
-            return (func: InputErrorFunction) => {
-                inputContainerRef.current[key]["errorFunc"] = func
-            }
-        },
-        [],
-    )
-
     const navigate = useNavigate()
 
-    const { gameState, socket } = use(SocketContext)
+    const { gameState, socket, setSocketConnected } = use(SocketContext)
 
     useEffect(() => {
         if (gameState) {
@@ -84,8 +90,8 @@ function JoinGamePage() {
                             }
                             return { success: true }
                         }}
-                        setSubmitFunction={setSubmitFunction("roomCode")}
-                        setErrorFunction={setErrorFunction("roomCode")}
+                        setSubmitFunction={setSubmitFunctions.roomCode}
+                        setErrorFunction={setErrorFunctions.roomCode}
                     />
 
                     <FormTextInput
@@ -107,8 +113,8 @@ function JoinGamePage() {
                                 }
                             return { success: true }
                         }}
-                        setSubmitFunction={setSubmitFunction("name")}
-                        setErrorFunction={setErrorFunction("name")}
+                        setSubmitFunction={setSubmitFunctions.name}
+                        setErrorFunction={setErrorFunctions.name}
                     />
                     <Button
                         text="Join Game!"
@@ -152,6 +158,7 @@ function JoinGamePage() {
                                 }
                             } else {
                                 localStorage.setItem("pid", resp.data)
+                                setSocketConnected(true)
                             }
                         }}
                         textSize="text-xl"

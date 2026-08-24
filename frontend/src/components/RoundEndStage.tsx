@@ -1,4 +1,4 @@
-import { SocketContext } from "@/base/BasePage.js"
+import SocketContext from "@/base/SocketContext.js"
 import { use, useState } from "react"
 import PlayingStageCards from "./PlayingStageCards.js"
 import { cardSuitToSymbol, cardValueToHumanStr } from "@/util/cards.js"

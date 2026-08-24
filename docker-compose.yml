@@ -10,4 +10,3 @@ services:
   backend:
     build: ./backend
     restart: unless-stopped
-

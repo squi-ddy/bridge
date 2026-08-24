@@ -2,7 +2,7 @@ import SetTitle from "@/components/SetTitle.js"
 import { useNavigate } from "react-router-dom"
 import Button from "@/components/Button.js"
 import { use } from "react"
-import { SocketContext } from "@/base/BasePage.js"
+import SocketContext from "@/base/SocketContext.js"
 
 function LobbyPage() {
     const navigate = useNavigate()

@@ -1,7 +1,8 @@
 import SetTitle from "@/components/SetTitle.js"
 import { useNavigate, useParams } from "react-router-dom"
 import { useCallback, use, useEffect, Fragment } from "react"
-import { SettingsContext, SocketContext } from "@/base/BasePage.js"
+import SettingsContext from "@/base/SettingsContext.js"
+import SocketContext from "@/base/SocketContext.js"
 import {
     cardSuitToSymbol,
     cardToCardURL,

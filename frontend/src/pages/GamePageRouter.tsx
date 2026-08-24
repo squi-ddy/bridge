@@ -1,4 +1,4 @@
-import { SocketContext } from "@/base/BasePage.js"
+import SocketContext from "@/base/SocketContext.js"
 import { use, useEffect } from "react"
 import LobbyPage from "./LobbyPage.js"
 import GamePage from "./GamePage.js"
@@ -7,7 +7,7 @@ import { GameState } from "@backend/types/GameState.js"
 
 function GamePageRouter() {
     const navigate = useNavigate()
-    const { gameState } = use(SocketContext)
+    const { gameState, setShowSocketStatus } = use(SocketContext)
     const { roomCode: roomCodeParam } = useParams()
 
     useEffect(() => {
@@ -17,6 +17,13 @@ function GamePageRouter() {
             navigate("/")
         }
     }, [gameState, navigate, roomCodeParam])
+
+    useEffect(() => {
+        setShowSocketStatus(true)
+        return () => {
+            setShowSocketStatus(false)
+        }
+    }, [setShowSocketStatus])
 
     if (gameState?.gameState === GameState.LOBBY) {
         return <LobbyPage />

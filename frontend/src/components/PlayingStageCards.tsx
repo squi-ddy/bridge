@@ -1,5 +1,5 @@
 import { use } from "react"
-import { SettingsContext } from "@/base/BasePage.js"
+import SettingsContext from "@/base/SettingsContext.js"
 import { cardToCardURL } from "@/util/cards.js"
 import { Card } from "@backend/types/Card.js"
 import CardImage from "./CardImage.js"

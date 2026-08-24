@@ -1,7 +1,8 @@
 import { defineConfig } from "vite"
-import react from "@vitejs/plugin-react"
 import typescript from "@rollup/plugin-typescript"
 import tailwindcss from "@tailwindcss/vite"
+import react, { reactCompilerPreset } from "@vitejs/plugin-react"
+import babel from "@rolldown/plugin-babel"
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -16,5 +17,8 @@ export default defineConfig({
             ],
         }),
         tailwindcss(),
+        babel({
+            presets: [reactCompilerPreset()],
+        }),
     ],
 })

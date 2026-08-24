@@ -3,8 +3,8 @@ import {
     InputErrorFunction,
     InputSubmitFunction,
 } from "@/types/FormDefinition.js"
-import { useFloating } from "@floating-ui/react"
-import { useCallback, useState } from "react"
+import { size, useFloating } from "@floating-ui/react"
+import { useCallback, useEffect, useState } from "react"
 
 const defaultChecker: InputCheckFunction<number> = () => {
     return { success: true }
@@ -28,37 +28,69 @@ function FormSelectionInput(props: {
     setSubmitFunction?: (getValue: InputSubmitFunction<number>) => void
     setErrorFunction?: (setError: InputErrorFunction) => void
 }) {
+    const {
+        fieldName,
+        checker,
+        fieldPlaceholder,
+        edit,
+        width,
+        z,
+        h,
+        textSize,
+        innerTextSize,
+        errorTextSize,
+        options,
+        setSubmitFunction,
+        setErrorFunction,
+    } = props
+
     const { refs: errorRefs, floatingStyles: errorFloatingStyles } =
         useFloating({
             placement: "bottom",
         })
+    const { setReference: setErrorRef, setFloating: setErrorFloatingRef } =
+        errorRefs
     const { refs: dropdownRefs, floatingStyles: dropdownFloatingStyles } =
         useFloating({
             placement: "bottom",
+            middleware: [
+                size({
+                    apply({ rects, elements }) {
+                        Object.assign(elements.floating.style, {
+                            // Match the exact width of the reference trigger
+                            width: `${rects.reference.width}px`,
+                        })
+                    },
+                }),
+            ],
         })
+    const {
+        setReference: setDropdownRef,
+        setFloating: setDropdownFloatingRef,
+    } = dropdownRefs
     const [error, setError] = useState(false)
     const [errorMessage, setErrorMessage] = useState("")
     const [fieldValue, setFieldValue] = useState<number>(props.fieldValue ?? -1)
     const [dropdownOpen, setDropdownOpen] = useState(false)
 
-    const width = props.width ?? "w-5/6"
-    const h = props.h ?? "h-14"
-    const z = props.z ?? "z-0"
-    const textSize = props.textSize ?? "text-2xl"
-    const innerTextSize = props.innerTextSize ?? "text-2xl"
-    const errorTextSize = props.errorTextSize ?? "text-l"
-    const checker = props.checker ?? defaultChecker
-    const setSubmitFunction = props.setSubmitFunction ?? emptyFunction
-    const setErrorFunction = props.setErrorFunction ?? emptyFunction
-    const edit = props.edit ?? true
-    const fieldText =
-        fieldValue === -1 ? "Select..." : props.options[fieldValue]
+    const finalWidth = width ?? "w-5/6"
+    const finalH = h ?? "h-14"
+    const finalZ = z ?? "z-0"
+    const finalTextSize = textSize ?? "text-2xl"
+    const finalInnerTextSize = innerTextSize ?? "text-2xl"
+    const finalErrorTextSize = errorTextSize ?? "text-l"
+    const finalChecker = checker ?? defaultChecker
+    const finalSetSubmitFunction = setSubmitFunction ?? emptyFunction
+    const finalSetErrorFunction = setErrorFunction ?? emptyFunction
+    const finalEdit = edit ?? true
+
+    const fieldText = fieldValue === -1 ? "Select..." : options[fieldValue]
 
     const submitFunction: InputSubmitFunction<number> = useCallback(() => {
-        if (!edit) {
+        if (!finalEdit) {
             return fieldValue
         }
-        const check = checker(fieldValue)
+        const check = finalChecker(fieldValue)
         if (check.success) {
             setError(false)
             return fieldValue
@@ -67,7 +99,7 @@ function FormSelectionInput(props: {
             setErrorMessage(check.message)
             return null
         }
-    }, [edit, fieldValue, checker])
+    }, [finalEdit, fieldValue, finalChecker])
 
     const errorFunction: InputErrorFunction = useCallback(
         (errorMessage: string) => {
@@ -77,72 +109,72 @@ function FormSelectionInput(props: {
         [],
     )
 
-    setErrorFunction(errorFunction)
-    setSubmitFunction(submitFunction)
+    useEffect(() => {
+        finalSetErrorFunction(errorFunction)
+        finalSetSubmitFunction(submitFunction)
+    }, [
+        errorFunction,
+        submitFunction,
+        finalSetErrorFunction,
+        finalSetSubmitFunction,
+    ])
 
     return (
         <div
-            key={props.fieldName + (edit ? "-edit" : "")}
-            ref={errorRefs.setReference}
-            className={`min-w-0 ${h} ${width} ${z} ${
-                edit ? "flex flex-row items-center gap-4" : ""
+            key={fieldName + (finalEdit ? "-edit" : "")}
+            ref={setErrorRef}
+            className={`min-w-0 ${finalH} ${finalWidth} ${finalZ} ${
+                finalEdit ? "flex flex-row items-center gap-4" : ""
             }`}
         >
-            {props.fieldPlaceholder && (
-                <p className={`${textSize} w-1/6 text-center min-w-fit`}>
-                    {props.fieldPlaceholder}
+            {fieldPlaceholder && (
+                <p className={`${finalTextSize} w-1/6 text-center min-w-fit`}>
+                    {fieldPlaceholder}
                 </p>
             )}
             <span
-                ref={dropdownRefs.setReference}
+                ref={setDropdownRef}
                 onClick={() => {
                     setError(false)
                     setDropdownOpen(!dropdownOpen)
                 }}
-                className={`border-2 rounded-xl bg-transparent ${innerTextSize} w-full h-full min-w-0
+                className={`border-2 rounded-xl bg-transparent ${finalInnerTextSize} w-full h-full min-w-0
                     transition-colors flex items-center justify-center ${
                         error ? "border-red-500" : ""
                     }
                     ${fieldValue === -1 ? "text-gray-400 italic" : ""} ${
-                        edit ? "cursor-pointer" : ""
+                        finalEdit ? "cursor-pointer" : ""
                     } ${dropdownOpen ? "border-sky-400" : ""}`}
             >
                 {fieldText}
             </span>
-            {edit && (
+            {finalEdit && (
                 <>
                     {error && (
                         <p
                             style={errorFloatingStyles}
-                            ref={errorRefs.setFloating}
-                            className={`mt-2 ${errorTextSize} text-center border-white border bg-red-400 py-1 px-2 rounded-md pointer-events-none`}
+                            ref={setErrorFloatingRef}
+                            className={`mt-2 ${finalErrorTextSize} text-center border-white border bg-red-400 py-1 px-2 rounded-md pointer-events-none`}
                         >
                             {errorMessage}
                         </p>
                     )}
                     {dropdownOpen && (
                         <div
-                            ref={dropdownRefs.setFloating}
+                            ref={setDropdownFloatingRef}
                             className="border-2 border-white rounded-xl flex flex-col bg-black mt-1 max-h-72 overflow-y-scroll"
-                            style={{
-                                width: (
-                                    dropdownRefs.reference?.current as
-                                        | HTMLElement
-                                        | undefined
-                                )?.offsetWidth,
-                                ...dropdownFloatingStyles,
-                            }}
+                            style={dropdownFloatingStyles}
                         >
-                            {props.options.map((option, index) => (
+                            {options.map((option, index) => (
                                 <span
                                     key={option}
                                     onClick={() => {
                                         setFieldValue(index)
                                         setDropdownOpen(false)
                                     }}
-                                    className={`${innerTextSize} w-full ${h} cursor-pointer flex justify-center items-center hover:bg-sky-800/50 transition-colors shrink-0
+                                    className={`${finalInnerTextSize} w-full ${finalH} cursor-pointer flex justify-center items-center hover:bg-sky-800/50 transition-colors shrink-0
                                 ${index === 0 ? "rounded-t-xl " : ""} ${
-                                    index === props.options.length - 1
+                                    index === options.length - 1
                                         ? "rounded-b-xl"
                                         : "border-b-2 border-white"
                                 }

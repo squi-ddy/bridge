@@ -8,6 +8,7 @@ import {
 export const socket: Socket<ServerToClientEvents, ClientToServerEvents> = io(
     settings.SOCKET_URL,
     {
+        autoConnect: false,
         transports: ["websocket"],
         path: settings.SOCKET_SERVER_PATH,
     },

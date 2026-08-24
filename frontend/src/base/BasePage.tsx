@@ -1,58 +1,24 @@
-import {
-    createContext,
-    Dispatch,
-    SetStateAction,
-    useEffect,
-    useMemo,
-    useState,
-} from "react"
+import { useEffect, useMemo, useState } from "react"
 import { socket } from "@/socket.js"
 import { CensoredGameState } from "@backend/types/CensoredGameState.js"
-import {
-    ClientToServerEvents,
-    ServerToClientEvents,
-} from "@backend/types/Socket.js"
-import { Socket } from "socket.io-client"
-
-export const SocketContext = createContext<{
-    gameState: CensoredGameState | null | undefined
-    setGameState?: Dispatch<SetStateAction<CensoredGameState | null>>
-    socket?: Socket<ServerToClientEvents, ClientToServerEvents>
-}>({ gameState: undefined })
-
-export type SettingsType = {
-    balatro: boolean
-}
-
-export type SettingsContextType = {
-    settings: SettingsType
-    setSettings: (globalContext: SettingsType) => void
-}
-
-export const SettingsContext = createContext<SettingsContextType>({
-    settings: { balatro: false },
-    setSettings: () => {},
-})
+import SettingsContext from "./SettingsContext.js"
+import SocketContext from "./SocketContext.js"
+import { TbWifi, TbWifiOff } from "react-icons/tb"
 
 function BasePage(props: { children?: React.ReactNode }) {
     const [currentGameState, setCurrentGameState] =
         useState<CensoredGameState | null>(null)
+    const [socketConnected, setSocketConnected] = useState(false)
+    const [showSocketStatus, setShowSocketStatus] = useState(false)
 
-    useEffect(() => {
-        const cleanup = () => {
-            socket.off("syncState")
-            socket.disconnect()
-        }
-
-        socket.on("syncState", (state: CensoredGameState) => {
-            setCurrentGameState(state)
-        })
-
+    const attemptReconnect = () => {
         const pid = localStorage.getItem("pid")
         if (pid === null) {
             // no pid, not connected
-            return cleanup
+            return
         }
+
+        console.log("Attempting to reconnect with pid", pid)
 
         socket.emit("reconnect", pid, (data) => {
             if (!data.status || data.data === 0) {
@@ -66,9 +32,39 @@ function BasePage(props: { children?: React.ReactNode }) {
                 socket.disconnect()
             } else {
                 // success
+                setSocketConnected(true)
                 console.log("Reconnected")
             }
         })
+    }
+
+    useEffect(() => {
+        const cleanup = () => {
+            socket.off("connect")
+            socket.off("syncState")
+            socket.off("disconnect")
+            socket.disconnect()
+        }
+
+        socket.on("connect", () => {
+            attemptReconnect()
+        })
+
+        socket.on("syncState", (state: CensoredGameState) => {
+            setCurrentGameState(state)
+        })
+
+        socket.on("disconnect", (reason) => {
+            if (reason === "io client disconnect") {
+                // client disconnected, do nothing
+                return
+            }
+
+            setSocketConnected(false)
+        })
+
+        // connect the socket
+        socket.connect()
 
         return cleanup
     }, [])
@@ -78,6 +74,8 @@ function BasePage(props: { children?: React.ReactNode }) {
             gameState: currentGameState,
             setGameState: setCurrentGameState,
             socket,
+            setShowSocketStatus,
+            setSocketConnected,
         }
     }, [currentGameState])
 
@@ -91,7 +89,7 @@ function BasePage(props: { children?: React.ReactNode }) {
         <div id="root" className="font-nunito">
             <SettingsContext value={{ settings, setSettings }}>
                 <SocketContext value={socketContextValue}>
-                    <div className="bg-linear-to-r from-sky-900 to-sky-800 w-full h-20">
+                    <div className="relative bg-linear-to-r from-sky-900 to-sky-800 w-full h-20">
                         <div className="px-5 flex items-center justify-center p-2 gap-2 h-full">
                             <p
                                 className={`text-5xl text-orange-400 drop-shadow-lg font-bold ${
@@ -114,6 +112,22 @@ function BasePage(props: { children?: React.ReactNode }) {
                                 ridge
                             </p>
                         </div>
+                        {showSocketStatus &&
+                            (socketConnected ? (
+                                <div className="absolute right-5 top-1/2 -translate-y-1/2 text-green-400 font-bold h-1/2 aspect-square">
+                                    <TbWifi
+                                        size="100%"
+                                        aria-label="Connected"
+                                    />
+                                </div>
+                            ) : (
+                                <div className="absolute right-5 top-1/2 -translate-y-1/2 text-red-400 font-bold h-1/2 aspect-square">
+                                    <TbWifiOff
+                                        size="100%"
+                                        aria-label="Disconnected"
+                                    />
+                                </div>
+                            ))}
                     </div>
 
                     {props.children}
